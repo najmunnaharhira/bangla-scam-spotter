@@ -36,3 +36,17 @@ export const VERDICT_LABELS: Record<Verdict, string> = {
   suspicious: "Suspicious",
   likely_scam: "Likely scam",
 };
+
+export interface RecoveryStep {
+  title: string;
+  detail: string;
+  urgent: boolean;
+}
+
+export interface RecoveryPlan {
+  scamType: string;
+  summary: string;
+  steps: RecoveryStep[];
+  helplines: string[];
+  reassurance: string;
+}

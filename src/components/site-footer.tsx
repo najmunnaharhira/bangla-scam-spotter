@@ -17,7 +17,8 @@ export function SiteFooter() {
         <div className="space-y-2">
           <p className="font-semibold">ScamShield BD</p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            An AI scam checker for Bangladesh. Check a message, learn the red flags, protect your family.
+            An AI scam checker for Bangladesh. Check a message, learn the red flags, protect your
+            family.
           </p>
           <p className="text-xs text-muted-foreground">
             Built For Ostad Presents YUNet AIgnite Buildathon 2026

@@ -78,21 +78,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "ScamShield BD" },
+      {
+        name: "description",
+        content:
+          "Check if a message is a scam in seconds. An AI scam checker built for Bangladesh.",
+      },
+      { name: "author", content: "ScamShield BD" },
+      { property: "og:title", content: "ScamShield BD" },
+      {
+        property: "og:description",
+        content:
+          "Check if a message is a scam in seconds. An AI scam checker built for Bangladesh.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "theme-color", content: "#0f766e" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
     ],
   }),
   shellComponent: RootShell,
