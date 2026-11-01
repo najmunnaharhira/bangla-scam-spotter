@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { to: "/", label: "Home" },
-  { to: "/check", label: "Check" },
-  { to: "/practice", label: "Practice" },
-  { to: "/help", label: "Get Help" },
-  { to: "/about", label: "About" },
+  { to: "/", key: "nav.home" },
+  { to: "/check", key: "nav.check" },
+  { to: "/practice", key: "nav.practice" },
+  { to: "/help", key: "nav.help" },
+  { to: "/about", key: "nav.about" },
 ] as const;
 
 function LanguageToggle() {
-  const { lang, setLang } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
 
   return (
     <Button
@@ -25,7 +25,7 @@ function LanguageToggle() {
       variant="ghost"
       size="sm"
       onClick={() => setLang(lang === "en" ? "bn" : "en")}
-      aria-label={lang === "en" ? "বাংলায় দেখুন" : "View in English"}
+      aria-label={lang === "en" ? t("nav.viewInBangla") : t("nav.viewInEnglish")}
       className="font-medium"
     >
       {lang === "en" ? "বাংলা" : "English"}
@@ -34,6 +34,7 @@ function LanguageToggle() {
 }
 
 export function SiteHeader() {
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const matchRoute = useMatchRoute();
 
@@ -52,7 +53,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4">
-        <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="ScamShield BD home">
+        <Link to="/" className="flex shrink-0 items-center gap-2" aria-label={t("nav.homeAriaLabel")}>
           <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <ShieldCheck className="size-5" aria-hidden="true" />
           </span>
@@ -62,7 +63,7 @@ export function SiteHeader() {
         {/* Official buildathon sticker — visible on every page, desktop and mobile */}
         <BuildathonSticker />
 
-        <nav aria-label="Main navigation" className="ml-auto hidden items-center gap-1 md:flex">
+        <nav aria-label={t("nav.mainLabel")} className="ml-auto hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.to}
@@ -73,7 +74,7 @@ export function SiteHeader() {
                 isActive(link.to) && "bg-accent text-accent-foreground",
               )}
             >
-              {link.label}
+              {t(link.key)}
             </Link>
           ))}
         </nav>
@@ -90,7 +91,7 @@ export function SiteHeader() {
           className="md:hidden"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-label={menuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
           onClick={() => setMenuOpen((open) => !open)}
         >
           {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
@@ -100,7 +101,7 @@ export function SiteHeader() {
       {menuOpen ? (
         <nav
           id="mobile-nav"
-          aria-label="Mobile navigation"
+          aria-label={t("nav.mobileLabel")}
           className="border-t border-border md:hidden"
         >
           <ul className="mx-auto flex max-w-6xl flex-col px-4 py-2">
@@ -115,7 +116,7 @@ export function SiteHeader() {
                     isActive(link.to) && "bg-accent",
                   )}
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               </li>
             ))}

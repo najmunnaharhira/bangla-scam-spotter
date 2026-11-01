@@ -33,16 +33,8 @@ import {
   recoveryPlanLocally,
   type IncidentReport,
 } from "@/lib/local-analyzer";
-import { CHANNELS, HELPLINES, WHAT_TO_DO_IF_SCAMMED } from "@/lib/sample-data";
-import {
-  MONEY_SENT_LABELS,
-  PRIORITY_LABELS,
-  URGENCY_LABELS,
-  WHEN_LABELS,
-  type MoneySent,
-  type RecoveryPlan,
-  type WhenHappened,
-} from "@/lib/types";
+import { CHANNELS, localizedHelplines, localizedWhatToDoIfScammed } from "@/lib/sample-data";
+import type { MoneySent, RecoveryPlan, WhenHappened } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/help")({
@@ -61,24 +53,20 @@ export const Route = createFileRoute("/help")({
 
 const MIN_DESCRIPTION = 10;
 
-const SUGGESTED_QUESTIONS = [
-  "What should I say when I call the helpline?",
-  "Can I still get my money back?",
-  "The scammer is calling again. What do I do?",
-];
-
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }
 
-function friendlyErrorMessage(error: unknown): string {
+function friendlyErrorMessage(error: unknown, genericError: string): string {
   const message = error instanceof Error ? error.message : String(error);
-  return message.replace(/^[A-Z_]+:\s*/, "") || "Something went wrong. Please try again.";
+  return message.replace(/^[A-Z_]+:\s*/, "") || genericError;
 }
 
 function HelpPage() {
-  const { t } = useLanguage();
+  const { t, tf, lang } = useLanguage();
+  const helplines = localizedHelplines(lang);
+  const whatToDoIfScammed = localizedWhatToDoIfScammed(lang);
   const [whatHappened, setWhatHappened] = React.useState("");
   const [channel, setChannel] = React.useState<string>("SMS");
   const [moneySent, setMoneySent] = React.useState<MoneySent>("not_sure");
@@ -129,7 +117,7 @@ function HelpPage() {
         setIncident(report);
         setOffline(true);
       } else {
-        setError(friendlyErrorMessage(err));
+        setError(friendlyErrorMessage(err, t("common.genericError")));
       }
     } finally {
       setLoading(false);
@@ -145,9 +133,7 @@ function HelpPage() {
         </span>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("help.title")}</h1>
-          <p className="mt-1 text-muted-foreground">
-            This is not your fault. Tell us what happened and get a step-by-step plan.
-          </p>
+          <p className="mt-1 text-muted-foreground">{t("help.intro")}</p>
         </div>
       </div>
 
@@ -172,13 +158,13 @@ function HelpPage() {
             id="what-happened"
             value={whatHappened}
             onChange={(e) => setWhatHappened(e.target.value)}
-            placeholder="Describe it in your own words, in English or Bangla..."
+            placeholder={t("help.descriptionPlaceholder")}
             rows={5}
             maxLength={2000}
             aria-describedby="what-happened-hint"
           />
           <p id="what-happened-hint" className="text-xs text-muted-foreground">
-            At least {MIN_DESCRIPTION} characters. Never type your PIN, OTP or password here.
+            {tf("help.descriptionHint", { min: MIN_DESCRIPTION })}
           </p>
         </div>
 
@@ -189,14 +175,14 @@ function HelpPage() {
             onValueChange={(value) => setMoneySent(value as MoneySent)}
             className="grid gap-2 sm:grid-cols-2"
           >
-            {(Object.keys(MONEY_SENT_LABELS) as MoneySent[]).map((key) => (
+            {(["yes", "pin_otp", "no", "not_sure"] as MoneySent[]).map((key) => (
               <Label
                 key={key}
                 htmlFor={`money-${key}`}
                 className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 font-normal has-[[data-state=checked]]:border-primary"
               >
                 <RadioGroupItem id={`money-${key}`} value={key} />
-                {MONEY_SENT_LABELS[key]}
+                {t(`moneySent.${key}`)}
               </Label>
             ))}
           </RadioGroup>
@@ -213,9 +199,9 @@ function HelpPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(Object.keys(WHEN_LABELS) as WhenHappened[]).map((key) => (
+                {(["last_24h", "within_week", "older", "ongoing"] as WhenHappened[]).map((key) => (
                   <SelectItem key={key} value={key}>
-                    {WHEN_LABELS[key]}
+                    {t(`when.${key}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -230,7 +216,7 @@ function HelpPage() {
               <SelectContent>
                 {CHANNELS.map((c) => (
                   <SelectItem key={c} value={c}>
-                    {c}
+                    {t(`channel.${c}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -242,7 +228,7 @@ function HelpPage() {
               id="provider"
               value={provider}
               onChange={(e) => setProvider(e.target.value)}
-              placeholder="e.g. bKash, Nagad, bank"
+              placeholder={t("help.providerPlaceholder")}
               maxLength={60}
             />
           </div>
@@ -275,10 +261,7 @@ function HelpPage() {
           {offline ? (
             <div className="flex items-start gap-2 rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground">
               <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              <p>
-                The AI assistant is busy, so this is our standard plan for your answers. Try again
-                in a minute for a plan tailored to your story.
-              </p>
+              <p>{t("help.offlineNotice")}</p>
             </div>
           ) : null}
 
@@ -291,7 +274,7 @@ function HelpPage() {
             <CardHeader>
               <div className="mb-2 flex flex-wrap gap-2">
                 <Badge variant={plan.urgency === "immediate" ? "scam" : "suspicious"}>
-                  {URGENCY_LABELS[plan.urgency]}
+                  {t(`urgency.${plan.urgency}`)}
                 </Badge>
                 <Badge variant="outline">{plan.scamType}</Badge>
               </div>
@@ -311,7 +294,7 @@ function HelpPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-medium">{step.title}</p>
                         <Badge variant={step.priority === 1 ? "scam" : "outline"}>
-                          {PRIORITY_LABELS[step.priority]}
+                          {t(`priority.${step.priority}`)}
                         </Badge>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">{step.detail}</p>
@@ -371,7 +354,7 @@ function HelpPage() {
         <Card>
           <CardContent className="pt-5">
             <ul className="list-inside list-disc space-y-2 text-sm">
-              {WHAT_TO_DO_IF_SCAMMED.map((step, i) => (
+              {whatToDoIfScammed.map((step, i) => (
                 <li key={i}>{step}</li>
               ))}
             </ul>
@@ -380,7 +363,7 @@ function HelpPage() {
 
         <h2 className="text-xl font-bold tracking-tight">{t("help.helplinesTitle")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          {HELPLINES.map((line) => (
+          {helplines.map((line) => (
             <Card key={line.name}>
               <CardContent className="flex items-center justify-between gap-3 pt-5">
                 <div>
@@ -389,7 +372,7 @@ function HelpPage() {
                 </div>
                 <a
                   href={`tel:${line.number}`}
-                  aria-label={`Call ${line.name} on ${line.number}`}
+                  aria-label={tf("help.callAriaLabel", { name: line.name, number: line.number })}
                   className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
                 >
                   <Phone className="size-4" aria-hidden="true" />
@@ -415,6 +398,7 @@ function FollowUpChat({
   offline: boolean;
 }) {
   const { t } = useLanguage();
+  const SUGGESTED_QUESTIONS = [t("help.suggested1"), t("help.suggested2"), t("help.suggested3")];
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [question, setQuestion] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -443,7 +427,9 @@ function FollowUpChat({
       try {
         answer = await askRecoveryFollowUp({ data: { incident, plan, history, question: q } });
       } catch (err) {
-        answer = isAiUnavailable(err) ? followUpLocally(plan) : friendlyErrorMessage(err);
+        answer = isAiUnavailable(err)
+          ? followUpLocally(plan)
+          : friendlyErrorMessage(err, t("common.genericError"));
       }
     }
     setMessages((prev) => [...prev, { role: "assistant", content: answer }]);
@@ -457,10 +443,7 @@ function FollowUpChat({
           <MessageCircleQuestion className="size-5 text-primary" aria-hidden="true" />
           {t("help.followUpTitle")}
         </CardTitle>
-        <CardDescription>
-          Answers are based only on what you told us and your plan above. Never share your PIN or
-          OTP here.
-        </CardDescription>
+        <CardDescription>{t("help.followUpDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {messages.length > 0 ? (
@@ -475,14 +458,16 @@ function FollowUpChat({
                     : "bg-muted text-foreground",
                 )}
               >
-                <span className="sr-only">{message.role === "user" ? "You: " : "Assistant: "}</span>
+                <span className="sr-only">
+                  {message.role === "user" ? t("help.youLabel") : t("help.assistantLabel")}{" "}
+                </span>
                 {message.content}
               </div>
             ))}
             {loading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                Thinking...
+                {t("help.thinking")}
               </div>
             ) : null}
             <div ref={endRef} />
@@ -510,13 +495,13 @@ function FollowUpChat({
           }}
         >
           <Label htmlFor="follow-up" className="sr-only">
-            Your question
+            {t("help.questionSrLabel")}
           </Label>
           <Input
             id="follow-up"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Type your question..."
+            placeholder={t("help.followUpPlaceholder")}
             maxLength={500}
             disabled={loading}
           />

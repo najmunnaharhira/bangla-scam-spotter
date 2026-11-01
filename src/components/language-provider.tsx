@@ -1,11 +1,13 @@
 import * as React from "react";
 
-import { translations, type Lang } from "@/lib/i18n";
+import { format, translations, type Lang } from "@/lib/i18n";
 
 interface LanguageContextValue {
   lang: Lang;
   setLang: (lang: Lang) => void;
   t: (key: string) => string;
+  /** Translates `key`, then substitutes {placeholders} with `values`. */
+  tf: (key: string, values: Record<string, string | number>) => string;
 }
 
 const LanguageContext = React.createContext<LanguageContextValue | null>(null);
@@ -41,7 +43,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [lang],
   );
 
-  const value = React.useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
+  const tf = React.useCallback(
+    (key: string, values: Record<string, string | number>) => format(t(key), values),
+    [t],
+  );
+
+  const value = React.useMemo(() => ({ lang, setLang, t, tf }), [lang, setLang, t, tf]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

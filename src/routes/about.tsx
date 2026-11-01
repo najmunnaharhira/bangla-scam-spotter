@@ -1,68 +1,62 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, ShieldCheck, Sparkles, Target } from "lucide-react";
 
+import { useLanguage } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GOLDEN_RULES } from "@/lib/sample-data";
+import { localizedGoldenRules } from "@/lib/sample-data";
 
 export const Route = createFileRoute("/about")({
   component: AboutPage,
 });
 
 function AboutPage() {
+  const { t, lang } = useLanguage();
+  const goldenRules = localizedGoldenRules(lang);
+
   return (
     <>
       <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
         <span className="flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
           <ShieldCheck className="size-6" aria-hidden="true" />
         </span>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">About ScamShield BD</h1>
-        <p className="mt-3 text-muted-foreground">
-          Scams targeting mobile financial services, job seekers and families cost people in
-          Bangladesh real money every day — and the people most at risk are often the ones with the
-          least access to tools that explain the warning signs in plain language. ScamShield BD uses
-          AI to read any suspicious message or screenshot and explain, in simple English or Bangla,
-          whether it's safe, suspicious, or a likely scam.
-        </p>
+        <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">{t("about.title")}</h1>
+        <p className="mt-3 text-muted-foreground">{t("about.paragraph")}</p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <Card>
             <CardHeader>
               <Target className="size-6 text-primary" aria-hidden="true" />
-              <CardTitle className="mt-2 text-base">Our mission</CardTitle>
+              <CardTitle className="mt-2 text-base">{t("about.missionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              Help everyday people in Bangladesh recognise scams before they lose money, not after.
+              {t("about.missionDesc")}
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
               <BookOpen className="size-6 text-primary" aria-hidden="true" />
-              <CardTitle className="mt-2 text-base">How it works</CardTitle>
+              <CardTitle className="mt-2 text-base">{t("about.howTitle")}</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              AI trained on common Bangladeshi scam patterns reads your message or screenshot and
-              scores the risk with clear reasons, not a black box.
-            </CardContent>
+            <CardContent className="text-sm text-muted-foreground">{t("about.howDesc")}</CardContent>
           </Card>
           <Card>
             <CardHeader>
               <Sparkles className="size-6 text-primary" aria-hidden="true" />
-              <CardTitle className="mt-2 text-base">Built for everyone</CardTitle>
+              <CardTitle className="mt-2 text-base">{t("about.builtForTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              Simple language, Bangla explanations for family members, and a practice game to build
-              lasting awareness.
+              {t("about.builtForDesc")}
             </CardContent>
           </Card>
         </div>
 
         <div className="mt-12">
-          <h2 className="text-xl font-bold tracking-tight">Golden rules to stay safe</h2>
+          <h2 className="text-xl font-bold tracking-tight">{t("about.goldenRulesTitle")}</h2>
           <Card className="mt-4">
             <CardContent className="pt-5">
               <ul className="list-inside list-disc space-y-2 text-sm">
-                {GOLDEN_RULES.map((rule, i) => (
+                {goldenRules.map((rule, i) => (
                   <li key={i}>{rule}</li>
                 ))}
               </ul>
@@ -71,12 +65,9 @@ function AboutPage() {
         </div>
 
         <div className="mt-12 rounded-xl border border-border bg-card p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Built For Ostad Presents YUNet AIgnite Buildathon 2026. AI-based risk estimates, not
-            legal or financial advice.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("about.footerNote")}</p>
           <Button asChild className="mt-4">
-            <Link to="/check">Check your first message</Link>
+            <Link to="/check">{t("about.checkFirstMessage")}</Link>
           </Button>
         </div>
       </section>

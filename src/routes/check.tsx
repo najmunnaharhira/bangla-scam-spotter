@@ -33,8 +33,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useHistory } from "@/hooks/use-check-history";
 import { analyzeMessage, explainBangla } from "@/lib/ai/scamshield.functions";
 import { analyzeLocally, explainBanglaLocally, isAiUnavailable } from "@/lib/local-analyzer";
-import { CHANNELS, EXAMPLE_CHIPS } from "@/lib/sample-data";
-import { VERDICT_LABELS, type AnalysisResult, type CheckRecord, type Verdict } from "@/lib/types";
+import { CHANNELS, EXAMPLE_CHIPS, exampleChipLabel } from "@/lib/sample-data";
+import { type AnalysisResult, type CheckRecord, type Verdict } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/check")({
@@ -43,10 +43,10 @@ export const Route = createFileRoute("/check")({
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-function friendlyErrorMessage(error: unknown): string {
+function friendlyErrorMessage(error: unknown, genericError: string): string {
   const message = error instanceof Error ? error.message : String(error);
   const withoutPrefix = message.replace(/^[A-Z_]+:\s*/, "");
-  return withoutPrefix || "Something went wrong. Please try again.";
+  return withoutPrefix || genericError;
 }
 
 function verdictBadgeVariant(verdict: Verdict): "safe" | "suspicious" | "scam" {
@@ -75,7 +75,7 @@ function readFileAsBase64(file: File): Promise<string> {
 }
 
 function CheckPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [text, setText] = React.useState("");
   const [sender, setSender] = React.useState("");
   const [channel, setChannel] = React.useState<string>("SMS");
@@ -99,11 +99,11 @@ function CheckPage() {
   const handleFile = async (file: File) => {
     setError(null);
     if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
+      setError(t("check.chooseImageError"));
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setError("The screenshot is too large. Please upload an image under 5 MB.");
+      setError(t("check.imageTooLargeError"));
       return;
     }
     const base64 = await readFileAsBase64(file);
@@ -155,7 +155,7 @@ function CheckPage() {
         setOffline(true);
         save(analyzeLocally(trimmed));
       } else {
-        setError(friendlyErrorMessage(err));
+        setError(friendlyErrorMessage(err, t("common.genericError")));
       }
     } finally {
       setLoading(false);
@@ -201,10 +201,7 @@ function CheckPage() {
     <>
       <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("check.title")}</h1>
-        <p className="mt-2 text-muted-foreground">
-          Paste the text of a message or upload a screenshot. We'll tell you how risky it is and
-          why.
-        </p>
+        <p className="mt-2 text-muted-foreground">{t("check.subtitle")}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {EXAMPLE_CHIPS.map((chip) => (
@@ -214,7 +211,7 @@ function CheckPage() {
               onClick={() => applyExample(chip.text)}
               className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
             >
-              Try: {chip.label}
+              {t("check.tryLabel")} {exampleChipLabel(lang, chip)}
             </button>
           ))}
         </div>
@@ -226,7 +223,7 @@ function CheckPage() {
               id="message-text"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Paste the message here..."
+              placeholder={t("check.messagePlaceholder")}
               rows={6}
               maxLength={2000}
             />
@@ -239,7 +236,7 @@ function CheckPage() {
                 id="sender"
                 value={sender}
                 onChange={(e) => setSender(e.target.value)}
-                placeholder="e.g. bKash, 017XXXXXXXX"
+                placeholder={t("check.senderPlaceholder")}
                 maxLength={120}
               />
             </div>
@@ -252,7 +249,7 @@ function CheckPage() {
                 <SelectContent>
                   {CHANNELS.map((c) => (
                     <SelectItem key={c} value={c}>
-                      {c}
+                      {t(`channel.${c}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -266,7 +263,7 @@ function CheckPage() {
               <div className="relative inline-block">
                 <img
                   src={image.preview}
-                  alt="Uploaded screenshot preview"
+                  alt={t("check.screenshotPreviewAlt")}
                   className="max-h-64 rounded-lg border border-border object-contain"
                 />
                 <Button
@@ -275,7 +272,7 @@ function CheckPage() {
                   size="icon-sm"
                   className="absolute -right-2 -top-2 rounded-full"
                   onClick={removeImage}
-                  aria-label="Remove screenshot"
+                  aria-label={t("check.removeScreenshot")}
                 >
                   <X className="size-4" />
                 </Button>
@@ -286,7 +283,7 @@ function CheckPage() {
                 className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-input p-6 text-center text-sm text-muted-foreground transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-ring hover:border-primary hover:text-foreground"
               >
                 <ImageUp className="size-6" aria-hidden="true" />
-                Click to upload a screenshot (max 5 MB)
+                {t("check.uploadInstructions")}
                 <input
                   ref={fileInputRef}
                   id="screenshot"
@@ -329,10 +326,7 @@ function CheckPage() {
             {offline ? (
               <div className="flex items-start gap-2 rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground">
                 <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                <p>
-                  The AI service is busy right now, so this is a quick check using known scam
-                  patterns. Try again in a minute for a full AI analysis.
-                </p>
+                <p>{t("check.offlineNotice")}</p>
               </div>
             ) : null}
             <Card
@@ -347,14 +341,14 @@ function CheckPage() {
                 <div>
                   <Badge variant={verdictBadgeVariant(result.verdict)} className="mb-2">
                     <VerdictIcon verdict={result.verdict} className="size-3.5" />
-                    {VERDICT_LABELS[result.verdict]}
+                    {t(`verdict.${result.verdict}`)}
                   </Badge>
                   <CardTitle>{result.scamType}</CardTitle>
                   <CardDescription className="mt-1">{result.summary}</CardDescription>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-3xl font-bold tabular-nums">{result.riskScore}</p>
-                  <p className="text-xs text-muted-foreground">risk score / 100</p>
+                  <p className="text-xs text-muted-foreground">{t("check.riskScoreLabel")}</p>
                 </div>
               </CardHeader>
               <CardContent>

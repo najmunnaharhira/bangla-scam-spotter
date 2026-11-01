@@ -15,13 +15,13 @@ export const Route = createFileRoute("/practice")({
   component: PracticePage,
 });
 
-function friendlyErrorMessage(error: unknown): string {
+function friendlyErrorMessage(error: unknown, genericError: string): string {
   const message = error instanceof Error ? error.message : String(error);
-  return message.replace(/^[A-Z_]+:\s*/, "") || "Something went wrong. Please try again.";
+  return message.replace(/^[A-Z_]+:\s*/, "") || genericError;
 }
 
 function PracticePage() {
-  const { t } = useLanguage();
+  const { t, tf } = useLanguage();
   const [items, setItems] = React.useState<PracticeItem[] | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -44,12 +44,12 @@ function PracticePage() {
         setItems(FALLBACK_PRACTICE);
         setOffline(true);
       } else {
-        setError(friendlyErrorMessage(err));
+        setError(friendlyErrorMessage(err, t("common.genericError")));
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     void loadRound();
@@ -77,14 +77,12 @@ function PracticePage() {
     <>
       <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("practice.title")}</h1>
-        <p className="mt-2 text-muted-foreground">
-          Read each message and guess: is it a scam or genuine? Learn the red flags as you go.
-        </p>
+        <p className="mt-2 text-muted-foreground">{t("practice.subtitle")}</p>
 
         {loading ? (
           <div className="mt-10 flex flex-col items-center gap-3 py-16 text-muted-foreground">
             <Loader2 className="size-6 animate-spin" aria-hidden="true" />
-            <p>Generating a new round...</p>
+            <p>{t("practice.generating")}</p>
           </div>
         ) : error ? (
           <div className="mt-10 rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
@@ -102,20 +100,15 @@ function PracticePage() {
           <div className="mt-6 space-y-5">
             {offline ? (
               <p className="rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground">
-                The AI is busy, so this is a built-in practice round. Play again later for fresh AI
-                messages.
+                {t("practice.offlineNotice")}
               </p>
             ) : null}
             <div
               className="flex items-center justify-between text-sm text-muted-foreground"
               aria-live="polite"
             >
-              <span>
-                Message {index + 1} of {items.length}
-              </span>
-              <span>
-                Score: {score}/{Object.keys(answers).length}
-              </span>
+              <span>{tf("practice.messageOf", { current: index + 1, total: items.length })}</span>
+              <span>{tf("practice.score", { score, answered: Object.keys(answers).length })}</span>
             </div>
 
             <Card>
@@ -162,10 +155,10 @@ function PracticePage() {
                       <XCircle className="size-5 text-danger" aria-hidden="true" />
                     )}
                     <CardTitle className="text-base">
-                      {answers[index] === current.isScam ? "Correct!" : "Not quite"}
+                      {answers[index] === current.isScam ? t("practice.correct") : t("practice.notQuite")}
                     </CardTitle>
                     <Badge variant={current.isScam ? "scam" : "safe"} className="ml-auto">
-                      {current.isScam ? "Scam" : "Genuine"}
+                      {current.isScam ? t("practice.scam") : t("practice.genuine")}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -191,7 +184,7 @@ function PracticePage() {
             {roundDone ? (
               <div className="rounded-lg border border-border bg-card p-5 text-center">
                 <p className="text-lg font-semibold">
-                  Round finished — {score}/{items.length} correct
+                  {tf("practice.roundFinished", { score, total: items.length })}
                 </p>
                 <Button type="button" className="mt-4" onClick={() => void loadRound()}>
                   <RefreshCw className="size-4" aria-hidden="true" />

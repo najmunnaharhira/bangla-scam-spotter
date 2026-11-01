@@ -14,7 +14,7 @@ import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GOLDEN_RULES, SCAM_TYPES } from "@/lib/sample-data";
+import { localizedGoldenRules, localizedScamTypes } from "@/lib/sample-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -53,28 +53,15 @@ export const Route = createFileRoute("/")({
 });
 
 const HOW_IT_WORKS = [
-  {
-    icon: MessageSquareText,
-    titleKey: "home.step1Title",
-    description:
-      "Copy the SMS, Messenger text or bKash notification — or upload a screenshot of it.",
-  },
-  {
-    icon: ShieldCheck,
-    titleKey: "home.step2Title",
-    description:
-      "ScamShield reads it and gives a risk score, the exact red flags and what the scammer is trying to do.",
-  },
-  {
-    icon: Languages,
-    titleKey: "home.step3Title",
-    description:
-      "Read a simple Bangla explanation and pass it on to parents and grandparents before anyone sends money.",
-  },
+  { icon: MessageSquareText, titleKey: "home.step1Title", descriptionKey: "home.step1Desc" },
+  { icon: ShieldCheck, titleKey: "home.step2Title", descriptionKey: "home.step2Desc" },
+  { icon: Languages, titleKey: "home.step3Title", descriptionKey: "home.step3Desc" },
 ];
 
 function Index() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const scamTypes = localizedScamTypes(lang);
+  const goldenRules = localizedGoldenRules(lang);
 
   return (
     <div className="flex flex-col">
@@ -88,10 +75,7 @@ function Index() {
             <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">
               {t("home.heroTitle")}
             </h1>
-            <p className="mt-4 max-w-lg text-lg text-muted-foreground">
-              ScamShield BD checks suspicious messages — fake bKash “wrong sends”, OTP thieves, fake
-              jobs and lottery wins — and explains the red flags in simple English and Bangla.
-            </p>
+            <p className="mt-4 max-w-lg text-lg text-muted-foreground">{t("home.heroParagraph")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link to="/check">
@@ -107,7 +91,7 @@ function Index() {
           </div>
           <img
             src={heroImage}
-            alt="Illustration of a person checking a suspicious message with ScamShield BD"
+            alt={t("home.heroImageAlt")}
             className="mx-auto w-full max-w-md rounded-2xl border border-border shadow-lg md:max-w-none"
             loading="eager"
           />
@@ -127,7 +111,7 @@ function Index() {
                   <step.icon className="size-5" aria-hidden="true" />
                 </span>
                 <CardTitle className="text-lg">{t(step.titleKey)}</CardTitle>
-                <CardDescription>{step.description}</CardDescription>
+                <CardDescription>{t(step.descriptionKey)}</CardDescription>
               </CardHeader>
             </Card>
           ))}
@@ -140,12 +124,9 @@ function Index() {
           <h2 id="scam-types" className="text-2xl font-bold tracking-tight md:text-3xl">
             {t("home.scamTypes")}
           </h2>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            These are the tricks most used in Bangladesh right now. Every one of them can be spotted
-            with a quick check.
-          </p>
+          <p className="mt-2 max-w-2xl text-muted-foreground">{t("home.scamTypesIntro")}</p>
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {SCAM_TYPES.map((scam) => (
+            {scamTypes.map((scam) => (
               <li key={scam.title}>
                 <Card className="h-full">
                   <CardHeader>
@@ -168,7 +149,7 @@ function Index() {
           {t("home.goldenRules")}
         </h2>
         <ul className="mt-6 grid gap-3 md:grid-cols-2">
-          {GOLDEN_RULES.slice(0, 6).map((rule) => (
+          {goldenRules.slice(0, 6).map((rule) => (
             <li
               key={rule}
               className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-sm"
@@ -196,8 +177,7 @@ function Index() {
               {t("home.alreadyRepliedTitle")}
             </h2>
             <p className="mt-2 max-w-xl text-primary-foreground/85">
-              Describe what happened in your own words and get a personalised action plan: who to
-              call first, how to protect your account, and what to watch out for next.
+              {t("home.alreadyRepliedParagraph")}
             </p>
           </div>
           <Button asChild size="lg" variant="secondary" className="shrink-0">
@@ -212,11 +192,7 @@ function Index() {
       <section className="mx-auto w-full max-w-6xl px-4 py-10">
         <div className="flex flex-col items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-5 sm:flex-row sm:items-center">
           <Siren className="size-6 shrink-0 text-destructive" aria-hidden="true" />
-          <p className="text-sm text-foreground">
-            If money is leaving your account right now, don't wait for a website — call{" "}
-            <strong>bKash 16247</strong>, <strong>Nagad 16167</strong> or{" "}
-            <strong>emergency 999</strong> first.
-          </p>
+          <p className="text-sm text-foreground">{t("home.emergencyText")}</p>
         </div>
       </section>
     </div>
