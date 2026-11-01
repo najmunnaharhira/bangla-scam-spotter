@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import heroImage from "@/assets/hero-scamshield.png";
+import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,25 +55,27 @@ export const Route = createFileRoute("/")({
 const HOW_IT_WORKS = [
   {
     icon: MessageSquareText,
-    title: "1. Paste the message",
+    titleKey: "home.step1Title",
     description:
       "Copy the SMS, Messenger text or bKash notification — or upload a screenshot of it.",
   },
   {
     icon: ShieldCheck,
-    title: "2. Get the verdict",
+    titleKey: "home.step2Title",
     description:
       "ScamShield reads it and gives a risk score, the exact red flags and what the scammer is trying to do.",
   },
   {
     icon: Languages,
-    title: "3. Share it safely",
+    titleKey: "home.step3Title",
     description:
       "Read a simple Bangla explanation and pass it on to parents and grandparents before anyone sends money.",
   },
 ];
 
 function Index() {
+  const { t } = useLanguage();
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -80,10 +83,10 @@ function Index() {
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 md:grid-cols-2 md:items-center md:py-20">
           <div>
             <Badge variant="secondary" className="mb-4">
-              Free · Nothing you check is stored on a server
+              {t("home.badge")}
             </Badge>
             <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">
-              Spot the scam before it costs you
+              {t("home.heroTitle")}
             </h1>
             <p className="mt-4 max-w-lg text-lg text-muted-foreground">
               ScamShield BD checks suspicious messages — fake bKash “wrong sends”, OTP thieves, fake
@@ -92,12 +95,12 @@ function Index() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link to="/check">
-                  Check a message <ArrowRight aria-hidden="true" />
+                  {t("home.checkCta")} <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/practice">
-                  <Gamepad2 aria-hidden="true" /> Try the practice game
+                  <Gamepad2 aria-hidden="true" /> {t("home.practiceCta")}
                 </Link>
               </Button>
             </div>
@@ -114,16 +117,16 @@ function Index() {
       {/* How it works */}
       <section aria-labelledby="how-it-works" className="mx-auto w-full max-w-6xl px-4 py-14">
         <h2 id="how-it-works" className="text-2xl font-bold tracking-tight md:text-3xl">
-          How it works
+          {t("home.howItWorks")}
         </h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {HOW_IT_WORKS.map((step) => (
-            <Card key={step.title}>
+            <Card key={step.titleKey}>
               <CardHeader>
                 <span className="mb-2 inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <step.icon className="size-5" aria-hidden="true" />
                 </span>
-                <CardTitle className="text-lg">{step.title}</CardTitle>
+                <CardTitle className="text-lg">{t(step.titleKey)}</CardTitle>
                 <CardDescription>{step.description}</CardDescription>
               </CardHeader>
             </Card>
@@ -135,7 +138,7 @@ function Index() {
       <section aria-labelledby="scam-types" className="border-y border-border bg-card/50">
         <div className="mx-auto w-full max-w-6xl px-4 py-14">
           <h2 id="scam-types" className="text-2xl font-bold tracking-tight md:text-3xl">
-            Scams we catch
+            {t("home.scamTypes")}
           </h2>
           <p className="mt-2 max-w-2xl text-muted-foreground">
             These are the tricks most used in Bangladesh right now. Every one of them can be spotted
@@ -162,7 +165,7 @@ function Index() {
       {/* Golden rules */}
       <section aria-labelledby="golden-rules" className="mx-auto w-full max-w-6xl px-4 py-14">
         <h2 id="golden-rules" className="text-2xl font-bold tracking-tight md:text-3xl">
-          Golden rules
+          {t("home.goldenRules")}
         </h2>
         <ul className="mt-6 grid gap-3 md:grid-cols-2">
           {GOLDEN_RULES.slice(0, 6).map((rule) => (
@@ -177,7 +180,7 @@ function Index() {
         </ul>
         <Button asChild variant="ghost" className="mt-4">
           <Link to="/help">
-            See all rules and helplines <ArrowRight aria-hidden="true" />
+            {t("home.seeAllRules")} <ArrowRight aria-hidden="true" />
           </Link>
         </Button>
       </section>
@@ -190,7 +193,7 @@ function Index() {
         <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-12 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 id="scammed-cta" className="text-2xl font-bold tracking-tight md:text-3xl">
-              Already replied to a suspicious message?
+              {t("home.alreadyRepliedTitle")}
             </h2>
             <p className="mt-2 max-w-xl text-primary-foreground/85">
               Describe what happened in your own words and get a personalised action plan: who to
@@ -199,7 +202,7 @@ function Index() {
           </div>
           <Button asChild size="lg" variant="secondary" className="shrink-0">
             <Link to="/help" hash="recover">
-              <HeartHandshake aria-hidden="true" /> Get my next steps
+              <HeartHandshake aria-hidden="true" /> {t("home.getNextSteps")}
             </Link>
           </Button>
         </div>

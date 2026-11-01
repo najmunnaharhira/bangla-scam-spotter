@@ -3,6 +3,7 @@ import { Link, useMatchRoute } from "@tanstack/react-router";
 import { Menu, ShieldCheck, X } from "lucide-react";
 
 import { BuildathonSticker } from "@/components/buildathon-sticker";
+import { useLanguage } from "@/components/language-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,23 @@ const NAV_LINKS = [
   { to: "/help", label: "Get Help" },
   { to: "/about", label: "About" },
 ] as const;
+
+function LanguageToggle() {
+  const { lang, setLang } = useLanguage();
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={() => setLang(lang === "en" ? "bn" : "en")}
+      aria-label={lang === "en" ? "বাংলায় দেখুন" : "View in English"}
+      className="font-medium"
+    >
+      {lang === "en" ? "বাংলা" : "English"}
+    </Button>
+  );
+}
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -60,7 +78,8 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto md:ml-2">
+        <div className="ml-auto flex items-center gap-1 md:ml-2">
+          <LanguageToggle />
           <ThemeToggle />
         </div>
 

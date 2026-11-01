@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 
+import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -74,6 +75,7 @@ function readFileAsBase64(file: File): Promise<string> {
 }
 
 function CheckPage() {
+  const { t } = useLanguage();
   const [text, setText] = React.useState("");
   const [sender, setSender] = React.useState("");
   const [channel, setChannel] = React.useState<string>("SMS");
@@ -198,7 +200,7 @@ function CheckPage() {
   return (
     <>
       <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Check a message</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("check.title")}</h1>
         <p className="mt-2 text-muted-foreground">
           Paste the text of a message or upload a screenshot. We'll tell you how risky it is and
           why.
@@ -219,7 +221,7 @@ function CheckPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="message-text">Message text</Label>
+            <Label htmlFor="message-text">{t("check.messageTextLabel")}</Label>
             <Textarea
               id="message-text"
               value={text}
@@ -232,7 +234,7 @@ function CheckPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="sender">Sender (optional)</Label>
+              <Label htmlFor="sender">{t("check.senderLabel")}</Label>
               <Input
                 id="sender"
                 value={sender}
@@ -242,7 +244,7 @@ function CheckPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="channel">Channel</Label>
+              <Label htmlFor="channel">{t("check.channelLabel")}</Label>
               <Select value={channel} onValueChange={setChannel}>
                 <SelectTrigger id="channel">
                   <SelectValue />
@@ -259,7 +261,7 @@ function CheckPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="screenshot">Or upload a screenshot</Label>
+            <Label htmlFor="screenshot">{t("check.uploadLabel")}</Label>
             {image ? (
               <div className="relative inline-block">
                 <img
@@ -312,7 +314,7 @@ function CheckPage() {
 
           <Button type="submit" size="lg" className="w-full" disabled={!canSubmit}>
             {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-            {loading ? "Checking..." : "Check this message"}
+            {loading ? t("check.submitting") : t("check.submit")}
           </Button>
         </form>
 
@@ -366,7 +368,7 @@ function CheckPage() {
             {result.extractedText ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Text found in screenshot</CardTitle>
+                  <CardTitle className="text-base">{t("check.extractedTextTitle")}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   {result.extractedText}
@@ -377,7 +379,7 @@ function CheckPage() {
             {result.redFlags.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Red flags</CardTitle>
+                  <CardTitle className="text-base">{t("check.redFlagsTitle")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {result.redFlags.map((flag, i) => (
@@ -393,7 +395,7 @@ function CheckPage() {
             {result.nextSteps.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">What to do next</CardTitle>
+                  <CardTitle className="text-base">{t("check.nextStepsTitle")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="list-inside list-disc space-y-1.5 text-sm">
@@ -408,7 +410,7 @@ function CheckPage() {
             {result.familyWarning ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Share with family</CardTitle>
+                  <CardTitle className="text-base">{t("check.shareFamilyTitle")}</CardTitle>
                   <CardDescription>A simple warning you can forward as-is.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
@@ -420,7 +422,7 @@ function CheckPage() {
                       ) : (
                         <Copy className="size-4" aria-hidden="true" />
                       )}
-                      {copied ? "Copied" : "Copy"}
+                      {copied ? t("check.copied") : t("check.copy")}
                     </Button>
                     <Button asChild variant="outline" size="sm">
                       <a
@@ -429,7 +431,7 @@ function CheckPage() {
                         rel="noopener noreferrer"
                       >
                         <Share2 className="size-4" aria-hidden="true" />
-                        Share on WhatsApp
+                        {t("check.shareWhatsapp")}
                       </a>
                     </Button>
                   </div>
@@ -449,7 +451,7 @@ function CheckPage() {
                 ) : (
                   <Languages className="size-4" aria-hidden="true" />
                 )}
-                Explain in Bangla
+                {t("check.explainBangla")}
               </Button>
               {bangla ? (
                 <Card className="mt-3">

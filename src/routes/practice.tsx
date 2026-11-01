@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, RefreshCw, ShieldAlert, ShieldCheck, XCircle } from "lucide-react";
 
+import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ function friendlyErrorMessage(error: unknown): string {
 }
 
 function PracticePage() {
+  const { t } = useLanguage();
   const [items, setItems] = React.useState<PracticeItem[] | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -74,7 +76,7 @@ function PracticePage() {
   return (
     <>
       <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Scam Spotter practice</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("practice.title")}</h1>
         <p className="mt-2 text-muted-foreground">
           Read each message and guess: is it a scam or genuine? Learn the red flags as you go.
         </p>
@@ -93,7 +95,7 @@ function PracticePage() {
               className="mt-3"
               onClick={() => void loadRound()}
             >
-              Try again
+              {t("practice.tryAgain")}
             </Button>
           </div>
         ) : items && current ? (
@@ -132,7 +134,7 @@ function PracticePage() {
                   onClick={() => guess(true)}
                 >
                   <ShieldAlert className="size-4" aria-hidden="true" />
-                  Scam
+                  {t("practice.scam")}
                 </Button>
                 <Button
                   type="button"
@@ -142,7 +144,7 @@ function PracticePage() {
                   onClick={() => guess(false)}
                 >
                   <ShieldCheck className="size-4" aria-hidden="true" />
-                  Genuine
+                  {t("practice.genuine")}
                 </Button>
               </div>
             ) : (
@@ -182,7 +184,7 @@ function PracticePage() {
 
             {answered && !roundDone ? (
               <Button type="button" size="lg" className="w-full" onClick={next}>
-                Next message
+                {t("practice.nextMessage")}
               </Button>
             ) : null}
 
@@ -193,7 +195,7 @@ function PracticePage() {
                 </p>
                 <Button type="button" className="mt-4" onClick={() => void loadRound()}>
                   <RefreshCw className="size-4" aria-hidden="true" />
-                  Play again
+                  {t("practice.playAgain")}
                 </Button>
               </div>
             ) : null}

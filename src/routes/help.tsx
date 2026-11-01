@@ -11,6 +11,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 
+import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +78,7 @@ function friendlyErrorMessage(error: unknown): string {
 }
 
 function HelpPage() {
+  const { t } = useLanguage();
   const [whatHappened, setWhatHappened] = React.useState("");
   const [channel, setChannel] = React.useState<string>("SMS");
   const [moneySent, setMoneySent] = React.useState<MoneySent>("not_sure");
@@ -142,9 +144,7 @@ function HelpPage() {
           <ShieldAlert className="size-6" aria-hidden="true" />
         </span>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Think you've been scammed?
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("help.title")}</h1>
           <p className="mt-1 text-muted-foreground">
             This is not your fault. Tell us what happened and get a step-by-step plan.
           </p>
@@ -159,13 +159,13 @@ function HelpPage() {
       >
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Label htmlFor="what-happened">What happened?</Label>
+            <Label htmlFor="what-happened">{t("help.whatHappenedLabel")}</Label>
             <button
               type="button"
               onClick={fillExample}
               className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
             >
-              Try an example
+              {t("help.tryExample")}
             </button>
           </div>
           <Textarea
@@ -183,7 +183,7 @@ function HelpPage() {
         </div>
 
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">Did you send money or share a code?</legend>
+          <legend className="text-sm font-medium">{t("help.moneySentLegend")}</legend>
           <RadioGroup
             value={moneySent}
             onValueChange={(value) => setMoneySent(value as MoneySent)}
@@ -204,7 +204,7 @@ function HelpPage() {
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="when">When did it happen?</Label>
+            <Label htmlFor="when">{t("help.whenLabel")}</Label>
             <Select
               value={whenHappened}
               onValueChange={(value) => setWhenHappened(value as WhenHappened)}
@@ -222,7 +222,7 @@ function HelpPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="help-channel">How were you contacted?</Label>
+            <Label htmlFor="help-channel">{t("help.channelLabel")}</Label>
             <Select value={channel} onValueChange={setChannel}>
               <SelectTrigger id="help-channel">
                 <SelectValue />
@@ -237,7 +237,7 @@ function HelpPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="provider">Service (optional)</Label>
+            <Label htmlFor="provider">{t("help.providerLabel")}</Label>
             <Input
               id="provider"
               value={provider}
@@ -260,7 +260,7 @@ function HelpPage() {
 
         <Button type="submit" size="lg" className="w-full" disabled={!canSubmit}>
           {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-          {loading ? "Building your plan..." : "Get my next steps"}
+          {loading ? t("help.submitting") : t("help.submit")}
         </Button>
       </form>
 
@@ -295,7 +295,7 @@ function HelpPage() {
                 </Badge>
                 <Badge variant="outline">{plan.scamType}</Badge>
               </div>
-              <CardTitle>Your action plan</CardTitle>
+              <CardTitle>{t("help.actionPlanTitle")}</CardTitle>
               {plan.whatLikelyHappened ? (
                 <CardDescription className="mt-1">{plan.whatLikelyHappened}</CardDescription>
               ) : null}
@@ -325,7 +325,7 @@ function HelpPage() {
           {plan.watchOut.length > 0 ? (
             <Card className="border-suspicious/60">
               <CardHeader>
-                <CardTitle className="text-base">Watch out for follow-up scams</CardTitle>
+                <CardTitle className="text-base">{t("help.watchOutTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="list-inside list-disc space-y-1.5 text-sm">
@@ -340,7 +340,7 @@ function HelpPage() {
           {plan.reportTo.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Who to report to</CardTitle>
+                <CardTitle className="text-base">{t("help.reportToTitle")}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
                 {plan.reportTo.map((line, i) => (
@@ -367,7 +367,7 @@ function HelpPage() {
       ) : null}
 
       <div className="mt-12 space-y-5">
-        <h2 className="text-xl font-bold tracking-tight">General steps if you've been scammed</h2>
+        <h2 className="text-xl font-bold tracking-tight">{t("help.generalStepsTitle")}</h2>
         <Card>
           <CardContent className="pt-5">
             <ul className="list-inside list-disc space-y-2 text-sm">
@@ -378,7 +378,7 @@ function HelpPage() {
           </CardContent>
         </Card>
 
-        <h2 className="text-xl font-bold tracking-tight">Official helplines</h2>
+        <h2 className="text-xl font-bold tracking-tight">{t("help.helplinesTitle")}</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {HELPLINES.map((line) => (
             <Card key={line.name}>
@@ -414,6 +414,7 @@ function FollowUpChat({
   plan: RecoveryPlan;
   offline: boolean;
 }) {
+  const { t } = useLanguage();
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [question, setQuestion] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -454,7 +455,7 @@ function FollowUpChat({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <MessageCircleQuestion className="size-5 text-primary" aria-hidden="true" />
-          Ask a follow-up question
+          {t("help.followUpTitle")}
         </CardTitle>
         <CardDescription>
           Answers are based only on what you told us and your plan above. Never share your PIN or
@@ -521,7 +522,7 @@ function FollowUpChat({
           />
           <Button type="submit" disabled={loading || question.trim().length < 2}>
             <Send className="size-4" aria-hidden="true" />
-            <span className="sr-only sm:not-sr-only">Ask</span>
+            <span className="sr-only sm:not-sr-only">{t("help.ask")}</span>
           </Button>
         </form>
       </CardContent>

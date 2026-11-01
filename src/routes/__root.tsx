@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { LanguageProvider } from "@/components/language-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -90,7 +91,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Check if a message is a scam in seconds. An AI scam checker built for Bangladesh.",
       },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "/og-image.png" },
       { name: "theme-color", content: "#0f766e" },
     ],
     links: [
@@ -127,11 +132,13 @@ function RootShell({ children }: { children: ReactNode }) {
         >
           Skip to main content
         </a>
-        <SiteHeader />
-        <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-          {children}
-        </main>
-        <SiteFooter />
+        <LanguageProvider>
+          <SiteHeader />
+          <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+            {children}
+          </main>
+          <SiteFooter />
+        </LanguageProvider>
         <Scripts />
       </body>
     </html>
