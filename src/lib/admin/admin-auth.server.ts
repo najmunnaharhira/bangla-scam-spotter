@@ -2,10 +2,13 @@
 // top level, or the admin email/password constants would ship to the client bundle.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const ADMIN_EMAIL = "softwareengineer586@gmail.com";
+function adminEmail(): string | undefined {
+  return process.env["ADMIN_EMAIL"]?.trim() || undefined;
+}
 
 export function isAdminEmail(email: string | undefined | null): boolean {
-  return !!email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const configured = adminEmail();
+  return !!email && !!configured && email.toLowerCase() === configured.toLowerCase();
 }
 
 /**
@@ -14,6 +17,14 @@ export function isAdminEmail(email: string | undefined | null): boolean {
  * changed later in Supabase keeps working.
  */
 export async function ensureAdminAccountExists(): Promise<void> {
+  const email = adminEmail();
+  const seedPassword = process.env["ADMIN_SEED_PASSWORD"];
+  if (!email || !seedPassword) {
+    throw new Error(
+      "UNAVAILABLE: The admin account has not been set up yet. Set ADMIN_EMAIL and ADMIN_SEED_PASSWORD in the project's environment variables, then try signing in again.",
+    );
+  }
+
   let page = 1;
   const perPage = 200;
   for (;;) {
@@ -26,15 +37,8 @@ export async function ensureAdminAccountExists(): Promise<void> {
     page += 1;
   }
 
-  const seedPassword = process.env["ADMIN_SEED_PASSWORD"];
-  if (!seedPassword) {
-    throw new Error(
-      "UNAVAILABLE: The admin account has not been set up yet. Set ADMIN_SEED_PASSWORD in the project's environment variables, then try signing in again.",
-    );
-  }
-
   const { error: createError } = await supabaseAdmin.auth.admin.createUser({
-    email: ADMIN_EMAIL,
+    email,
     password: seedPassword,
     email_confirm: true,
     user_metadata: { role: "admin" },
