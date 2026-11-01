@@ -91,6 +91,18 @@ function HelpPage() {
 
   const canSubmit = whatHappened.trim().length >= MIN_DESCRIPTION && !loading;
 
+  // Fills the form only; the person still presses the button (handy for demos).
+  const fillExample = () => {
+    setWhatHappened(
+      "Someone called saying they were from bKash and asked for the OTP to fix my account. I told them and Tk 3,000 was taken.",
+    );
+    setMoneySent("pin_otp");
+    setWhenHappened("last_24h");
+    setChannel("Phone call");
+    setProvider("bKash");
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
@@ -146,7 +158,16 @@ function HelpPage() {
         aria-label="Recovery assistant"
       >
         <div className="space-y-2">
-          <Label htmlFor="what-happened">What happened?</Label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label htmlFor="what-happened">What happened?</Label>
+            <button
+              type="button"
+              onClick={fillExample}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+            >
+              Try an example
+            </button>
+          </div>
           <Textarea
             id="what-happened"
             value={whatHappened}
