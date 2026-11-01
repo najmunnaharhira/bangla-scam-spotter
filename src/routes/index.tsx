@@ -12,13 +12,7 @@ import {
 import heroImage from "@/assets/hero-scamshield.png";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GOLDEN_RULES, SCAM_TYPES } from "@/lib/sample-data";
 
 export const Route = createFileRoute("/")({
@@ -92,9 +86,8 @@ function Index() {
               Spot the scam before it costs you
             </h1>
             <p className="mt-4 max-w-lg text-lg text-muted-foreground">
-              ScamShield BD checks suspicious messages — fake bKash “wrong sends”, OTP
-              thieves, fake jobs and lottery wins — and explains the red flags in
-              simple English and Bangla.
+              ScamShield BD checks suspicious messages — fake bKash “wrong sends”, OTP thieves, fake
+              jobs and lottery wins — and explains the red flags in simple English and Bangla.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg">
@@ -145,8 +138,8 @@ function Index() {
             Scams we catch
           </h2>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            These are the tricks most used in Bangladesh right now. Every one of them
-            can be spotted with a quick check.
+            These are the tricks most used in Bangladesh right now. Every one of them can be spotted
+            with a quick check.
           </p>
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {SCAM_TYPES.map((scam) => (
@@ -190,20 +183,22 @@ function Index() {
       </section>
 
       {/* Already scammed CTA */}
-      <section aria-labelledby="scammed-cta" className="border-t border-border bg-primary text-primary-foreground">
+      <section
+        aria-labelledby="scammed-cta"
+        className="border-t border-border bg-primary text-primary-foreground"
+      >
         <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-12 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 id="scammed-cta" className="text-2xl font-bold tracking-tight md:text-3xl">
               Already replied to a suspicious message?
             </h2>
             <p className="mt-2 max-w-xl text-primary-foreground/85">
-              Describe what happened in your own words and get a personalised action
-              plan: who to call first, how to protect your account, and what to watch
-              out for next.
+              Describe what happened in your own words and get a personalised action plan: who to
+              call first, how to protect your account, and what to watch out for next.
             </p>
           </div>
           <Button asChild size="lg" variant="secondary" className="shrink-0">
-            <Link to="/help#recover">
+            <Link to="/help" hash="recover">
               <HeartHandshake aria-hidden="true" /> Get my next steps
             </Link>
           </Button>

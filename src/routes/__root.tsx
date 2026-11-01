@@ -84,7 +84,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "AI scam checker for Bangladesh" },
       { name: "author", content: "ScamShield BD" },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "ScamShield BD" },
+      {
+        property: "og:description",
+        content:
+          "Check if a message is a scam in seconds. An AI scam checker built for Bangladesh.",
+      },
       { name: "twitter:card", content: "summary" },
+      { name: "theme-color", content: "#0f766e" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -98,6 +105,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -120,7 +128,7 @@ function RootShell({ children }: { children: ReactNode }) {
           Skip to main content
         </a>
         <SiteHeader />
-        <main id="main-content" className="flex-1">
+        <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
           {children}
         </main>
         <SiteFooter />

@@ -19,7 +19,17 @@ export function SiteHeader() {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const matchRoute = useMatchRoute();
 
-  const isActive = (to: string) => matchRoute({ to, fuzzy: true }) !== false;
+  // "/" must match exactly, otherwise Home would be highlighted on every page.
+  const isActive = (to: string) => matchRoute({ to, fuzzy: to !== "/" }) !== false;
+
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [menuOpen]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
@@ -69,13 +79,18 @@ export function SiteHeader() {
       </div>
 
       {menuOpen ? (
-        <nav id="mobile-nav" aria-label="Mobile navigation" className="border-t border-border md:hidden">
+        <nav
+          id="mobile-nav"
+          aria-label="Mobile navigation"
+          className="border-t border-border md:hidden"
+        >
           <ul className="mx-auto flex max-w-6xl flex-col px-4 py-2">
             {NAV_LINKS.map((link) => (
               <li key={link.to}>
                 <Link
                   to={link.to}
                   onClick={() => setMenuOpen(false)}
+                  aria-current={isActive(link.to) ? "page" : undefined}
                   className={cn(
                     "block rounded-lg px-3 py-3 text-base font-medium transition-colors hover:bg-accent",
                     isActive(link.to) && "bg-accent",

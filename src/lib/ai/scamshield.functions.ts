@@ -100,7 +100,9 @@ function throwFriendlyGatewayError(error: unknown): never {
     throw new Error("RATE_LIMITED: Too many checks right now — please try again in a minute.");
   }
   if (status === 402) {
-    throw new Error("NO_CREDITS: The AI service has run out of credits right now. Please try again later.");
+    throw new Error(
+      "NO_CREDITS: The AI service has run out of credits right now. Please try again later.",
+    );
   }
   if (status === 400) {
     throw new Error(
@@ -108,9 +110,13 @@ function throwFriendlyGatewayError(error: unknown): never {
     );
   }
   if (status === 401 || status === 403) {
-    throw new Error("UNAVAILABLE: The AI service is not available right now. Please try again later.");
+    throw new Error(
+      "UNAVAILABLE: The AI service is not available right now. Please try again later.",
+    );
   }
-  throw new Error("UNAVAILABLE: The AI service is not responding right now. Please try again in a moment.");
+  throw new Error(
+    "UNAVAILABLE: The AI service is not responding right now. Please try again in a moment.",
+  );
 }
 
 function normalizeVerdict(value: string, riskScore: number): Verdict {
@@ -177,7 +183,11 @@ export const analyzeMessage = createServerFn({ method: "POST" })
       });
       raw = await result.object;
     } catch (error) {
-      if (NoObjectGeneratedError.isInstance(error) && typeof error.text === "string" && error.text.trim()) {
+      if (
+        NoObjectGeneratedError.isInstance(error) &&
+        typeof error.text === "string" &&
+        error.text.trim()
+      ) {
         try {
           raw = JSON.parse(error.text);
         } catch {
@@ -215,7 +225,9 @@ export const explainBangla = createServerFn({ method: "POST" })
     if (!apiKey) {
       throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
     }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, { baseURL: GATEWAY_BASE_URL });
+    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
+      baseURL: GATEWAY_BASE_URL,
+    });
 
     const prompt = `Explain this scam-check result in simple Bangla:\n${JSON.stringify(data.result)}`;
 
@@ -256,7 +268,11 @@ export const generatePractice = createServerFn({ method: "POST" })
       });
       raw = await result.object;
     } catch (error) {
-      if (NoObjectGeneratedError.isInstance(error) && typeof error.text === "string" && error.text.trim()) {
+      if (
+        NoObjectGeneratedError.isInstance(error) &&
+        typeof error.text === "string" &&
+        error.text.trim()
+      ) {
         try {
           raw = JSON.parse(error.text);
         } catch {
@@ -322,7 +338,11 @@ export const generateRecoverySteps = createServerFn({ method: "POST" })
       });
       raw = await result.object;
     } catch (error) {
-      if (NoObjectGeneratedError.isInstance(error) && typeof error.text === "string" && error.text.trim()) {
+      if (
+        NoObjectGeneratedError.isInstance(error) &&
+        typeof error.text === "string" &&
+        error.text.trim()
+      ) {
         try {
           raw = JSON.parse(error.text);
         } catch {
@@ -355,9 +375,71 @@ export const generateRecoverySteps = createServerFn({ method: "POST" })
       steps:
         steps.length > 0
           ? steps
-          : [{ title: "Talk to a family member", detail: "Describe what happened and decide together.", priority: 1 }],
+          : [
+              {
+                title: "Talk to a family member",
+                detail: "Describe what happened and decide together.",
+                priority: 1,
+              },
+            ],
       watchOut: Array.isArray(value.watchOut) ? value.watchOut.slice(0, 5) : [],
       reportTo: Array.isArray(value.reportTo) ? value.reportTo.slice(0, 5) : [],
       familyAdvice: value.familyAdvice?.trim() || "",
     };
+  });
+
+const FOLLOW_UP_SYSTEM_PROMPT = `You are the same scam-recovery advisor for Bangladesh. The person already received an action plan for their situation and now asks a follow-up question. Answer ONLY using what they reported and the plan below, plus well-known, correct Bangladesh facts (bKash 16247, Nagad 16167, Rocket 16207, police and cyber crime 999).
+
+Rules:
+- Stay grounded: if the answer depends on something they did not report, say what you would need to know instead of guessing.
+- Never ask for or accept a PIN, OTP, password or full account number. If they offer one, tell them not to share it with anyone, including you.
+- Never promise money will be recovered.
+- If the question is unrelated to their scam or staying safe, politely steer back.
+- Reply in the same language as the question (English or Bangla). Keep it short: 2 to 5 plain sentences or a short list.
+- This is general guidance, not legal or financial advice.`;
+
+const followUpInputSchema = z.object({
+  incident: recoveryInputSchema,
+  plan: z.custom<RecoveryPlan>((value) => value != null && typeof value === "object"),
+  history: z
+    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(2000) }))
+    .max(12)
+    .default([]),
+  question: z.string().trim().min(2).max(500),
+});
+
+export const askRecoveryFollowUp = createServerFn({ method: "POST" })
+  .inputValidator(followUpInputSchema.parse)
+  .handler(async ({ data }): Promise<string> => {
+    const { createLovableAiGatewayProvider } = await import("./gateway.server");
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) {
+      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
+    }
+    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
+      baseURL: GATEWAY_BASE_URL,
+    });
+
+    const context = [
+      "What the person reported:",
+      `"""${data.incident.whatHappened}"""`,
+      `Channel: ${data.incident.channel?.trim() || "Unknown"}. Money sent or PIN/OTP shared: ${data.incident.moneySent}. When: ${data.incident.whenHappened}. Provider: ${data.incident.provider?.trim() || "Unknown"}.`,
+      "",
+      "Their action plan:",
+      JSON.stringify(data.plan),
+    ].join("\n");
+
+    try {
+      const result = streamText({
+        model: provider(RECOVERY_MODEL),
+        system: `${FOLLOW_UP_SYSTEM_PROMPT}\n\n${context}`,
+        messages: [...data.history.slice(-10), { role: "user" as const, content: data.question }],
+      });
+      const text = (await result.text).trim();
+      if (!text) throw new Error("UNAVAILABLE: No answer came back. Please try again.");
+      return text;
+    } catch (error) {
+      if (error instanceof Error && /^[A-Z_]+:/.test(error.message)) throw error;
+      throwFriendlyGatewayError(error);
+    }
   });

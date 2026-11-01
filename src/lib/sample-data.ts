@@ -22,22 +22,19 @@ export const EXAMPLE_CHIPS: ExampleChip[] = [
     id: "bkash",
     label: "Fake bKash “wrong send”",
     expected: "Likely scam",
-    text:
-      "bKash: You have received Tk 5,000 from 01712345678 by mistake. Please return the amount immediately or your bKash account will be permanently closed within 24 hours. Send money to 01899999777. Ref: BK7734021.",
+    text: "bKash: You have received Tk 5,000 from 01712345678 by mistake. Please return the amount immediately or your bKash account will be permanently closed within 24 hours. Send money to 01899999777. Ref: BK7734021.",
   },
   {
     id: "job",
     label: "Fake job offer with fee",
     expected: "Likely scam",
-    text:
-      "Congratulations! You have been selected for a work-from-home job at BD Online Tasks Ltd. Salary Tk 45,000/month. To activate your ID card and start working today, pay the registration fee Tk 850 via bKash/Nagad to 01611122233. Limited seats, reply fast!",
+    text: "Congratulations! You have been selected for a work-from-home job at BD Online Tasks Ltd. Salary Tk 45,000/month. To activate your ID card and start working today, pay the registration fee Tk 850 via bKash/Nagad to 01611122233. Limited seats, reply fast!",
   },
   {
     id: "delivery",
     label: "Genuine delivery update",
     expected: "Safe",
-    text:
-      "Pathao Courier: Your parcel from Rajdhani Store is arriving today between 2-5 PM. Delivery man Rakib will call you. No payment needed, it is prepaid. Track at pathao.com/track with code PC88213.",
+    text: "Pathao Courier: Your parcel from Rajdhani Store is arriving today between 2-5 PM. Delivery man Rakib will call you. No payment needed, it is prepaid. Track at pathao.com/track with code PC88213.",
   },
 ];
 
