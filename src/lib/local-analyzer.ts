@@ -284,6 +284,11 @@ export function followUpLocally(plan: RecoveryPlan): string {
   return `The AI assistant is busy right now, so I can't answer this question in detail. The most important thing is still your first step: ${first ? `${first.title}. ${first.detail}` : "call your provider's helpline."} You can reach ${plan.reportTo.join(", ")}. Please try your question again in a minute.`;
 }
 
+export function checkFollowUpLocally(result: AnalysisResult): string {
+  const first = result.nextSteps[0];
+  return `The AI assistant is busy right now, so I can't answer this question in detail. Based on the check: ${result.summary} ${first ? `The most important step is: ${first}` : ""} Please try your question again in a minute.`;
+}
+
 /** True when an error from a server function means the AI is not available. */
 export function isAiUnavailable(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);

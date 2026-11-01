@@ -5,6 +5,7 @@ type Dict = Record<string, string>;
 const en: Dict = {
   "nav.home": "Home",
   "nav.check": "Check",
+  "nav.history": "History",
   "nav.practice": "Practice",
   "nav.help": "Get Help",
   "nav.about": "About",
@@ -161,11 +162,34 @@ const en: Dict = {
   "channel.Phone call": "Phone call",
   "channel.Website": "Website",
   "channel.Other": "Other",
+
+  "history.title": "Your check history",
+  "history.subtitle": "Kept only on this device — never sent to a server.",
+  "history.empty": "You haven't checked any messages yet.",
+  "history.checkFirst": "Check a message",
+  "history.totalChecked": "Messages checked",
+  "history.scamsCaught": "Flagged as risky",
+  "history.clear": "Clear history",
+  "history.clearConfirm": "Clear all saved history on this device?",
+  "history.viewResult": "View result",
+
+  "check.reportSender": "Report this sender as a scam",
+  "check.reportSending": "Reporting...",
+  "check.reportSent": "Reported — thank you",
+  "check.reportedByCount": "Reported by {count} people as a scam sender",
+  "check.askFollowUp": "Ask a follow-up question",
+  "check.followUpPlaceholder": "Ask about this result...",
+
+  "pwa.installTitle": "Install ScamShield BD",
+  "pwa.installDesc": "Add it to your home screen for one-tap access, like an app.",
+  "pwa.install": "Install",
+  "pwa.dismiss": "Not now",
 };
 
 const bn: Dict = {
   "nav.home": "হোম",
   "nav.check": "চেক",
+  "nav.history": "ইতিহাস",
   "nav.practice": "প্র্যাকটিস",
   "nav.help": "সাহায্য নিন",
   "nav.about": "সম্পর্কে",
@@ -322,6 +346,28 @@ const bn: Dict = {
   "channel.Phone call": "ফোন কল",
   "channel.Website": "ওয়েবসাইট",
   "channel.Other": "অন্যান্য",
+
+  "history.title": "আপনার চেক ইতিহাস",
+  "history.subtitle": "শুধু এই ডিভাইসে সংরক্ষিত — কখনো সার্ভারে পাঠানো হয় না।",
+  "history.empty": "আপনি এখনো কোনো মেসেজ চেক করেননি।",
+  "history.checkFirst": "একটি মেসেজ চেক করুন",
+  "history.totalChecked": "চেক করা মেসেজ",
+  "history.scamsCaught": "ঝুঁকিপূর্ণ হিসেবে চিহ্নিত",
+  "history.clear": "ইতিহাস মুছুন",
+  "history.clearConfirm": "এই ডিভাইসে সংরক্ষিত সব ইতিহাস মুছে ফেলবেন?",
+  "history.viewResult": "ফলাফল দেখুন",
+
+  "check.reportSender": "এই প্রেরককে স্ক্যাম হিসেবে রিপোর্ট করুন",
+  "check.reportSending": "রিপোর্ট করা হচ্ছে...",
+  "check.reportSent": "রিপোর্ট করা হয়েছে — ধন্যবাদ",
+  "check.reportedByCount": "{count} জন এটিকে স্ক্যাম প্রেরক হিসেবে রিপোর্ট করেছেন",
+  "check.askFollowUp": "অনুসরণ প্রশ্ন জিজ্ঞাসা করুন",
+  "check.followUpPlaceholder": "এই ফলাফল সম্পর্কে জিজ্ঞাসা করুন...",
+
+  "pwa.installTitle": "স্ক্যামশিল্ড বিডি ইনস্টল করুন",
+  "pwa.installDesc": "এক-ট্যাপে অ্যাক্সেসের জন্য এটি আপনার হোম স্ক্রিনে যোগ করুন, অ্যাপের মতো।",
+  "pwa.install": "ইনস্টল করুন",
+  "pwa.dismiss": "এখন না",
 };
 
 export const translations: Record<Lang, Dict> = { en, bn };

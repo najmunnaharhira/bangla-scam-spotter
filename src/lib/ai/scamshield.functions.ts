@@ -443,3 +443,58 @@ export const askRecoveryFollowUp = createServerFn({ method: "POST" })
       throwFriendlyGatewayError(error);
     }
   });
+
+const CHECK_FOLLOW_UP_SYSTEM_PROMPT = `You are the same fraud-detection assistant for Bangladesh. The person already got a scam-check result for a message and now asks a follow-up question about it. Answer ONLY using the original message and the result below, plus well-known, correct Bangladesh facts (bKash 16247, Nagad 16167, Rocket 16207, police and cyber crime 999).
+
+Rules:
+- Stay grounded: if the answer depends on something not in the message or result, say what you would need to know instead of guessing.
+- Never ask for or accept a PIN, OTP, password or full account number. If they offer one, tell them not to share it with anyone, including you.
+- Never promise money will be recovered.
+- If the question is unrelated to this check or staying safe, politely steer back.
+- Reply in the same language as the question (English or Bangla). Keep it short: 2 to 5 plain sentences or a short list.
+- This is general guidance, not legal or financial advice.`;
+
+const checkFollowUpInputSchema = z.object({
+  messageText: z.string().max(2000).optional(),
+  result: z.custom<AnalysisResult>((value) => value != null && typeof value === "object"),
+  history: z
+    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(2000) }))
+    .max(12)
+    .default([]),
+  question: z.string().trim().min(2).max(500),
+});
+
+export const askCheckFollowUp = createServerFn({ method: "POST" })
+  .inputValidator(checkFollowUpInputSchema.parse)
+  .handler(async ({ data }): Promise<string> => {
+    const { createLovableAiGatewayProvider } = await import("./gateway.server");
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) {
+      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
+    }
+    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
+      baseURL: GATEWAY_BASE_URL,
+    });
+
+    const context = [
+      data.messageText?.trim() ? `The original message:\n"""${data.messageText.trim()}"""` : "",
+      "The check result:",
+      JSON.stringify(data.result),
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    try {
+      const result = streamText({
+        model: provider(ANALYZE_MODEL),
+        system: `${CHECK_FOLLOW_UP_SYSTEM_PROMPT}\n\n${context}`,
+        messages: [...data.history.slice(-10), { role: "user" as const, content: data.question }],
+      });
+      const text = (await result.text).trim();
+      if (!text) throw new Error("UNAVAILABLE: No answer came back. Please try again.");
+      return text;
+    } catch (error) {
+      if (error instanceof Error && /^[A-Z_]+:/.test(error.message)) throw error;
+      throwFriendlyGatewayError(error);
+    }
+  });

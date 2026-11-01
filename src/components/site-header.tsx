@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { to: "/", key: "nav.home" },
   { to: "/check", key: "nav.check" },
+  { to: "/history", key: "nav.history" },
   { to: "/practice", key: "nav.practice" },
   { to: "/help", key: "nav.help" },
   { to: "/about", key: "nav.about" },

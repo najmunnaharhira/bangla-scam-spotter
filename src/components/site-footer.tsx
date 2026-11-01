@@ -5,6 +5,7 @@ import { useLanguage } from "@/components/language-provider";
 const FOOTER_LINKS = [
   { to: "/", key: "nav.home" },
   { to: "/check", key: "nav.checkFull" },
+  { to: "/history", key: "nav.history" },
   { to: "/practice", key: "nav.practice" },
   { to: "/help", key: "nav.help" },
   { to: "/about", key: "nav.about" },

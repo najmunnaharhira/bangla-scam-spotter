@@ -4,10 +4,13 @@ import {
   AlertTriangle,
   Check,
   Copy,
+  Flag,
   ImageUp,
   Info,
   Languages,
   Loader2,
+  MessageCircleQuestion,
+  Send,
   Share2,
   ShieldAlert,
   ShieldCheck,
@@ -18,7 +21,13 @@ import {
 import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -31,8 +40,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useHistory } from "@/hooks/use-check-history";
-import { analyzeMessage, explainBangla } from "@/lib/ai/scamshield.functions";
-import { analyzeLocally, explainBanglaLocally, isAiUnavailable } from "@/lib/local-analyzer";
+import { reportScamSender, useScamReportCount } from "@/hooks/use-scam-reports";
+import { analyzeMessage, askCheckFollowUp, explainBangla } from "@/lib/ai/scamshield.functions";
+import {
+  analyzeLocally,
+  checkFollowUpLocally,
+  explainBanglaLocally,
+  isAiUnavailable,
+} from "@/lib/local-analyzer";
 import { CHANNELS, EXAMPLE_CHIPS, exampleChipLabel } from "@/lib/sample-data";
 import { type AnalysisResult, type CheckRecord, type Verdict } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -359,6 +374,10 @@ function CheckPage() {
               </CardContent>
             </Card>
 
+            {sender.trim() && result.verdict !== "safe" ? (
+              <SenderReportWidget sender={sender.trim()} />
+            ) : null}
+
             {result.extractedText ? (
               <Card>
                 <CardHeader>
@@ -455,9 +474,161 @@ function CheckPage() {
                 </Card>
               ) : null}
             </div>
+
+            <CheckFollowUpChat result={result} messageText={text} offline={offline} />
           </div>
         ) : null}
       </section>
     </>
+  );
+}
+
+function SenderReportWidget({ sender }: { sender: string }) {
+  const { t, tf } = useLanguage();
+  const count = useScamReportCount(sender);
+  const [status, setStatus] = React.useState<"idle" | "sending" | "sent">("idle");
+
+  const handleReport = async () => {
+    setStatus("sending");
+    const ok = await reportScamSender(sender);
+    setStatus(ok ? "sent" : "idle");
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/50 p-3 text-sm">
+      {count != null && count > 0 ? (
+        <Badge variant="outline" className="gap-1.5">
+          <Flag className="size-3.5" aria-hidden="true" />
+          {tf("check.reportedByCount", { count })}
+        </Badge>
+      ) : null}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="ml-auto"
+        onClick={() => void handleReport()}
+        disabled={status !== "idle"}
+      >
+        <Flag className="size-4" aria-hidden="true" />
+        {status === "sending"
+          ? t("check.reportSending")
+          : status === "sent"
+            ? t("check.reportSent")
+            : t("check.reportSender")}
+      </Button>
+    </div>
+  );
+}
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+function CheckFollowUpChat({
+  result,
+  messageText,
+  offline,
+}: {
+  result: AnalysisResult;
+  messageText: string;
+  offline: boolean;
+}) {
+  const { t } = useLanguage();
+  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+  const [question, setQuestion] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    setMessages([]);
+  }, [result]);
+
+  const ask = async (text: string) => {
+    const q = text.trim();
+    if (q.length < 2 || loading) return;
+    const history = messages;
+    setMessages([...history, { role: "user", content: q }]);
+    setQuestion("");
+    setLoading(true);
+    let answer: string;
+    if (offline) {
+      answer = checkFollowUpLocally(result);
+    } else {
+      try {
+        answer = await askCheckFollowUp({
+          data: { result, messageText: messageText || undefined, history, question: q },
+        });
+      } catch (err) {
+        answer = isAiUnavailable(err)
+          ? checkFollowUpLocally(result)
+          : friendlyErrorMessage(err, t("common.genericError"));
+      }
+    }
+    setMessages((prev) => [...prev, { role: "assistant", content: answer }]);
+    setLoading(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <MessageCircleQuestion className="size-5 text-primary" aria-hidden="true" />
+          {t("check.askFollowUp")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {messages.length > 0 ? (
+          <div className="space-y-3" role="log" aria-live="polite" aria-label="Follow-up answers">
+            {messages.map((message, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "max-w-[90%] whitespace-pre-line rounded-lg px-3 py-2 text-sm",
+                  message.role === "user"
+                    ? "ml-auto bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground",
+                )}
+              >
+                <span className="sr-only">
+                  {message.role === "user" ? t("help.youLabel") : t("help.assistantLabel")}{" "}
+                </span>
+                {message.content}
+              </div>
+            ))}
+            {loading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                {t("help.thinking")}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void ask(question);
+          }}
+        >
+          <Label htmlFor="check-follow-up" className="sr-only">
+            {t("help.questionSrLabel")}
+          </Label>
+          <Input
+            id="check-follow-up"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder={t("check.followUpPlaceholder")}
+            maxLength={500}
+            disabled={loading}
+          />
+          <Button type="submit" disabled={loading || question.trim().length < 2}>
+            <Send className="size-4" aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">{t("help.ask")}</span>
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
