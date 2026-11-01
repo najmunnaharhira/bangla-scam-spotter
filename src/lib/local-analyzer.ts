@@ -1,4 +1,11 @@
-import type { AnalysisResult, PracticeItem, RecoveryPlan, Verdict } from "@/lib/types";
+import type {
+  AnalysisResult,
+  MoneySent,
+  PracticeItem,
+  RecoveryPlan,
+  Verdict,
+  WhenHappened,
+} from "@/lib/types";
 
 /**
  * Rule-based fallback used when the AI service is unreachable, out of credits
@@ -192,70 +199,89 @@ export const FALLBACK_PRACTICE: PracticeItem[] = [
   },
 ];
 
-export function recoveryPlanLocally(description: string): RecoveryPlan {
-  const lower = description.toLowerCase();
-  const sharedCode = /(otp|pin|password|code|পিন|ওটিপি)/i.test(description);
-  const sentMoney = /(sent|send|paid|pay|transfer|টাকা)/i.test(description);
-  const provider = lower.includes("bkash")
-    ? "bKash (16247)"
-    : lower.includes("nagad")
-      ? "Nagad (16167)"
-      : lower.includes("rocket")
-        ? "Rocket (16216)"
-        : "bKash (16247) or Nagad (16167)";
+export interface IncidentReport {
+  whatHappened: string;
+  channel?: string | undefined;
+  moneySent: MoneySent;
+  whenHappened: WhenHappened;
+  provider?: string | undefined;
+}
 
+function helplineFor(incident: IncidentReport): string {
+  const text = `${incident.provider ?? ""} ${incident.whatHappened}`.toLowerCase();
+  if (text.includes("nagad")) return "Nagad (16167)";
+  if (text.includes("rocket")) return "Rocket (16207)";
+  if (text.includes("bkash")) return "bKash (16247)";
+  return "bKash (16247), Nagad (16167), Rocket (16207) or your bank";
+}
+
+export function recoveryPlanLocally(incident: IncidentReport): RecoveryPlan {
+  const helpline = helplineFor(incident);
   const steps: RecoveryPlan["steps"] = [];
-  if (sharedCode) {
+
+  if (incident.moneySent === "pin_otp") {
     steps.push({
-      title: "Lock your account now",
-      detail: `Call ${provider} or your bank right away and ask them to lock the account. Then change your PIN and password.`,
-      urgent: true,
+      title: "Change your PIN now",
+      detail: `Change your PIN from a safe phone, then call ${helpline} and ask them to lock the account.`,
+      priority: 1,
     });
   }
-  if (sentMoney) {
+  if (incident.moneySent === "yes" || incident.moneySent === "not_sure") {
     steps.push({
-      title: "Report the transaction",
-      detail: `Call ${provider} or your bank's hotline with the transaction ID and ask them to stop or reverse it.`,
-      urgent: true,
+      title: "Call the helpline right away",
+      detail: `Call ${helpline} with the transaction ID and ask them to freeze or reverse the transfer. The sooner, the better.`,
+      priority: 1,
     });
   }
   steps.push(
     {
       title: "Stop all contact",
-      detail: "Do not reply or send any more money, whatever they threaten. Block the number.",
-      urgent: true,
+      detail: "Do not reply or send anything more, whatever they threaten. Block the number.",
+      priority: 1,
     },
     {
       title: "Save the evidence",
-      detail: "Take screenshots of messages, numbers and transaction IDs before deleting anything.",
-      urgent: false,
-    },
-    {
-      title: "Report to the police",
       detail:
-        "Call 999 or visit your nearest police station's cyber crime desk with your evidence.",
-      urgent: false,
-    },
-    {
-      title: "Warn your family",
-      detail: "Tell family and friends about this scam so they can avoid it.",
-      urgent: false,
+        "Take screenshots of the messages, numbers and transaction IDs before deleting anything.",
+      priority: 2,
     },
   );
+  if (incident.moneySent !== "no") {
+    steps.push({
+      title: "Report to the police",
+      detail:
+        "Call 999 or visit your nearest police station's cyber crime desk with your screenshots.",
+      priority: 2,
+    });
+  }
+  steps.push({
+    title: "Turn on transaction alerts",
+    detail: "Check your recent transactions and turn on SMS alerts so you notice anything new.",
+    priority: 3,
+  });
 
+  const sent = incident.moneySent === "yes" || incident.moneySent === "pin_otp";
   return {
-    scamType: sharedCode
-      ? "OTP/PIN theft"
-      : sentMoney
-        ? "Money sent to a scammer"
-        : "Possible scam",
-    summary:
-      "Here are the most important steps, in order. Act on the first ones as soon as you can.",
-    steps,
-    helplines: ["bKash 16247", "Nagad 16167", "Rocket 16216", "Police 999"],
-    reassurance:
-      "This is not your fault. Scammers fool careful people every day, and help is available.",
+    urgency: sent && incident.whenHappened !== "older" ? "immediate" : sent ? "today" : "this_week",
+    whatLikelyHappened:
+      incident.moneySent === "no"
+        ? "It sounds like a scam attempt that you stopped in time. You did the right thing by checking."
+        : "It sounds like a scam that tried to take money or account access. Acting quickly gives the best chance to limit the damage.",
+    scamType: incident.moneySent === "pin_otp" ? "OTP/PIN theft" : "Possible scam",
+    steps: steps.slice(0, 6),
+    watchOut: [
+      "Scammers often call back pretending to be police or a “recovery agent” who asks for a fee. That is a second scam.",
+      "No real bank or bKash/Nagad agent will ever ask for your PIN or OTP.",
+    ],
+    reportTo: ["bKash 16247", "Nagad 16167", "Rocket 16207", "Police and cyber crime 999"],
+    familyAdvice:
+      "Tell your family what happened so they can spot the same trick. Being scammed is not your fault.",
   };
+}
+
+export function followUpLocally(plan: RecoveryPlan): string {
+  const first = plan.steps[0];
+  return `The AI assistant is busy right now, so I can't answer this question in detail. The most important thing is still your first step: ${first ? `${first.title}. ${first.detail}` : "call your provider's helpline."} You can reach ${plan.reportTo.join(", ")}. Please try your question again in a minute.`;
 }
 
 /** True when an error from a server function means the AI is not available. */

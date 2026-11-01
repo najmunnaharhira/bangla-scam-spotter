@@ -20,10 +20,24 @@ describe("local scam analyzer fallback", () => {
     expect(analyzeLocally(example("delivery")).verdict).toBe("safe");
   });
 
-  it("puts securing the account first when an OTP was shared", () => {
-    const plan = recoveryPlanLocally("I gave my bKash OTP to a caller and Tk 2000 was sent");
-    expect(plan.steps[0]?.urgent).toBe(true);
-    expect(plan.scamType).toBe("OTP/PIN theft");
+  it("puts changing the PIN first when an OTP was shared", () => {
+    const plan = recoveryPlanLocally({
+      whatHappened: "A caller got my bKash OTP and Tk 2000 was sent",
+      moneySent: "pin_otp",
+      whenHappened: "last_24h",
+    });
+    expect(plan.urgency).toBe("immediate");
+    expect(plan.steps[0]?.priority).toBe(1);
+    expect(plan.steps[0]?.detail).toContain("bKash (16247)");
+  });
+
+  it("keeps a stopped attempt low urgency", () => {
+    const plan = recoveryPlanLocally({
+      whatHappened: "Got a lottery SMS but did not reply",
+      moneySent: "no",
+      whenHappened: "within_week",
+    });
+    expect(plan.urgency).toBe("this_week");
   });
 
   it("treats input errors as real errors, not AI outages", () => {

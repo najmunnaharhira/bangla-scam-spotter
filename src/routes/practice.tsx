@@ -2,7 +2,6 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, RefreshCw, ShieldAlert, ShieldCheck, XCircle } from "lucide-react";
 
-import { AppLayout } from "@/components/app-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,7 +72,7 @@ function PracticePage() {
   const roundDone = items != null && Object.keys(answers).length === items.length;
 
   return (
-    <AppLayout>
+    <>
       <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Scam Spotter practice</h1>
         <p className="mt-2 text-muted-foreground">
@@ -201,6 +200,6 @@ function PracticePage() {
           </div>
         ) : null}
       </section>
-    </AppLayout>
+    </>
   );
 }

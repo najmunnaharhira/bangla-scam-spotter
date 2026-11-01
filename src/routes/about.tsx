@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, ShieldCheck, Sparkles, Target } from "lucide-react";
 
-import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GOLDEN_RULES } from "@/lib/sample-data";
@@ -12,7 +11,7 @@ export const Route = createFileRoute("/about")({
 
 function AboutPage() {
   return (
-    <AppLayout>
+    <>
       <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
         <span className="flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
           <ShieldCheck className="size-6" aria-hidden="true" />
@@ -81,6 +80,6 @@ function AboutPage() {
           </Button>
         </div>
       </section>
-    </AppLayout>
+    </>
   );
 }
