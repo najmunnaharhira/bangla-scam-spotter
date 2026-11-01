@@ -1,10 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { NoObjectGeneratedError, streamObject, streamText } from "ai";
 import { z } from "zod";
-import type { AnalysisResult, PracticeItem, Verdict } from "@/lib/types";
+import type { AnalysisResult, PracticeItem, RecoveryPlan, Verdict } from "@/lib/types";
 
 const GATEWAY_BASE_URL = "https://ai.gateway.lovable.dev/v1";
 const ANALYZE_MODEL = "google/gemini-3.8-flash";
+const RECOVERY_MODEL = "openai/gpt-6-astra";
 
 const SYSTEM_PROMPT = `You are a fraud-detection assistant for Bangladesh helping everyday people check whether a message is a scam. You know common local scams: fake mobile financial service (bKash, Nagad, Rocket) "wrong send" and cashback messages, OTP and PIN requests, fake job and visa offers with fees, lottery or prize wins, fake parcel/customs fees, romance and investment scams, fake government or bank notices, phishing links, and impersonation of relatives or officials.
 
@@ -15,6 +16,20 @@ Verdicts: "safe" (no scam signs), "suspicious" (some warning signs but not certa
 const BANGLA_SYSTEM_PROMPT = `You are a helpful assistant that explains scam-check results in simple, warm Bangla for family members such as parents and grandparents. Use short sentences, everyday words, and no technical jargon. Write 4-8 sentences: say how risky the message is, what the scammer tries to do, and one clear piece of advice. Do not use English words where a simple Bangla word exists, but keep brand names like bKash and Nagad in English.`;
 
 const PRACTICE_SYSTEM_PROMPT = `You generate a short practice game ("Scam Spotter") that teaches people in Bangladesh to recognise scam messages. Return exactly 5 short fictional messages (1-3 sentences each), clearly fictional, in a Bangladesh context, mixing scam messages and genuine messages (at least 2 must be genuine). Use realistic wording like a bKash "wrong send" SMS, a fake job offer, a lottery win, but also genuine ones like a delivery update or a real bank notice with no money request. Do not use real brand phone numbers, real links, or real people's names. For each item give: the message, whether it is a scam (isScam), a one-sentence explanation of why it is or is not a scam, and redFlags: an array of the specific scam signs (empty array for genuine messages).`;
+
+const RECOVERY_SYSTEM_PROMPT = `You are a scam-recovery advisor for Bangladesh. A person describes what happened after they suspected or fell for a scam (fake bKash/Nagad/Rocket "wrong send" transfers, OTP or PIN theft, fake job fees, lottery or prize wins, phishing links, impersonation of officials or relatives). You give calm, practical, tailored next steps.
+
+Rules:
+- Base every step on what the person actually described. Do not invent facts they did not give.
+- If they sent money: the first steps are to call the mobile financial service helpline immediately (bKash 16247, Nagad 16167, Rocket 16207) or their bank, ask to freeze or reverse the transaction, then report to the police (999) or the cyber crime desk with screenshots.
+- If they shared a PIN or OTP: change the PIN right away from a safe device, turn on transaction alerts, and check the transaction history.
+- If nothing was sent or shared: reassure them, block the number, keep evidence, and warn them not to send anything later.
+- If the description sounds like a genuine message (a real delivery update, a real bank notice with no money request), say so calmly and give only light advice.
+- Always warn about follow-up scams: scammers often call back pretending to be police or "recovery agents" who ask for money again.
+- Never promise that money can be recovered; say it may be possible if reported quickly.
+- Give 4 to 6 steps, ordered most urgent first, with priority 1 = do immediately, 2 = same day, 3 = when convenient.
+- Use simple English a school student can understand. Keep brand names like bKash and Nagad in English.
+- This is general guidance, not legal or financial advice.`;
 
 const analysisSchema = z.object({
   riskScore: z.number(),
@@ -38,6 +53,22 @@ const practiceSchema = z.object({
   ),
 });
 
+const recoverySchema = z.object({
+  urgency: z.enum(["immediate", "today", "this_week"]),
+  whatLikelyHappened: z.string(),
+  scamType: z.string(),
+  steps: z.array(
+    z.object({
+      title: z.string(),
+      detail: z.string(),
+      priority: z.number(),
+    }),
+  ),
+  watchOut: z.array(z.string()),
+  reportTo: z.array(z.string()),
+  familyAdvice: z.string(),
+});
+
 const analyzeInputSchema = z.object({
   text: z.string().max(2000).optional(),
   imageBase64: z.string().optional(),
@@ -51,6 +82,14 @@ const banglaInputSchema = z.object({
 });
 
 const practiceInputSchema = z.object({});
+
+const recoveryInputSchema = z.object({
+  whatHappened: z.string().min(10).max(2000),
+  channel: z.string().max(40).optional(),
+  moneySent: z.enum(["yes", "pin_otp", "no", "not_sure"]),
+  whenHappened: z.enum(["last_24h", "within_week", "older", "ongoing"]),
+  provider: z.string().max(60).optional(),
+});
 
 function throwFriendlyGatewayError(error: unknown): never {
   const status =
@@ -233,4 +272,92 @@ export const generatePractice = createServerFn({ method: "POST" })
       throw new Error("UNAVAILABLE: The practice round could not be generated. Please try again.");
     }
     return parsed.data.items.slice(0, 5);
+  });
+
+export const generateRecoverySteps = createServerFn({ method: "POST" })
+  .inputValidator(recoveryInputSchema.parse)
+  .handler(async ({ data }): Promise<RecoveryPlan> => {
+    const { createLovableAiGatewayProvider } = await import("./gateway.server");
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) {
+      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
+    }
+    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
+      baseURL: GATEWAY_BASE_URL,
+      structuredOutputs: true,
+    });
+
+    const moneySentLabels: Record<typeof data.moneySent, string> = {
+      yes: "Yes, they sent money",
+      pin_otp: "They shared a PIN or OTP",
+      no: "No, they did not send money or share a PIN/OTP",
+      not_sure: "They are not sure whether money was sent",
+    };
+    const whenLabels: Record<typeof data.whenHappened, string> = {
+      last_24h: "Within the last 24 hours",
+      within_week: "Within the last week",
+      older: "More than a week ago",
+      ongoing: "It is still happening",
+    };
+
+    const prompt = [
+      `What the person described:\n"""${data.whatHappened}"""`,
+      `How they were contacted: ${data.channel?.trim() || "Unknown"}.`,
+      `Money sent or PIN/OTP shared: ${moneySentLabels[data.moneySent]}.`,
+      `When it happened: ${whenLabels[data.whenHappened]}.`,
+      data.provider?.trim() ? `Service or provider involved: ${data.provider.trim()}.` : "",
+      "Give tailored next steps for this exact situation.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    let raw: unknown;
+    try {
+      const result = streamObject({
+        model: provider(RECOVERY_MODEL),
+        schema: recoverySchema,
+        system: RECOVERY_SYSTEM_PROMPT,
+        messages: [{ role: "user" as const, content: prompt }],
+        providerOptions: { lovable: { reasoningEffort: "medium" } },
+      });
+      raw = await result.object;
+    } catch (error) {
+      if (NoObjectGeneratedError.isInstance(error) && typeof error.text === "string" && error.text.trim()) {
+        try {
+          raw = JSON.parse(error.text);
+        } catch {
+          throwFriendlyGatewayError(error);
+        }
+      } else {
+        throwFriendlyGatewayError(error);
+      }
+    }
+
+    const parsed = recoverySchema.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error("UNAVAILABLE: The steps could not be generated. Please try again.");
+    }
+
+    const value = parsed.data;
+    const steps = (Array.isArray(value.steps) ? value.steps : [])
+      .map((step) => ({
+        title: step.title?.trim() || "Next step",
+        detail: step.detail?.trim() || "",
+        priority: Math.min(3, Math.max(1, Math.round(step.priority || 2))) as 1 | 2 | 3,
+      }))
+      .sort((a, b) => a.priority - b.priority)
+      .slice(0, 8);
+
+    return {
+      urgency: value.urgency,
+      whatLikelyHappened: value.whatLikelyHappened?.trim() || "",
+      scamType: value.scamType?.trim() || "General",
+      steps:
+        steps.length > 0
+          ? steps
+          : [{ title: "Talk to a family member", detail: "Describe what happened and decide together.", priority: 1 }],
+      watchOut: Array.isArray(value.watchOut) ? value.watchOut.slice(0, 5) : [],
+      reportTo: Array.isArray(value.reportTo) ? value.reportTo.slice(0, 5) : [],
+      familyAdvice: value.familyAdvice?.trim() || "",
+    };
   });
