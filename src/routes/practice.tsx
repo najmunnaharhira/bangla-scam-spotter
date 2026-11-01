@@ -1,6 +1,14 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Loader2, RefreshCw, ShieldAlert, ShieldCheck, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from "lucide-react";
 
 import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +30,9 @@ function friendlyErrorMessage(error: unknown, genericError: string): string {
 
 function PracticePage() {
   const { t, tf } = useLanguage();
-  const [items, setItems] = React.useState<PracticeItem[] | null>(null);
+  // Start with the built-in round so a visit never spends AI credits; AI rounds are on request.
+  const [items, setItems] = React.useState<PracticeItem[] | null>(FALLBACK_PRACTICE);
+  const [starter, setStarter] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [answers, setAnswers] = React.useState<Record<number, boolean>>({});
@@ -38,11 +48,13 @@ function PracticePage() {
       const round = await generatePractice({ data: {} });
       setItems(round);
       setOffline(false);
+      setStarter(false);
     } catch (err) {
       if (isAiUnavailable(err)) {
         // Keep the game playable when the AI is down: use the built-in round.
         setItems(FALLBACK_PRACTICE);
         setOffline(true);
+        setStarter(false);
       } else {
         setError(friendlyErrorMessage(err, t("common.genericError")));
       }
@@ -50,10 +62,6 @@ function PracticePage() {
       setLoading(false);
     }
   }, [t]);
-
-  React.useEffect(() => {
-    void loadRound();
-  }, [loadRound]);
 
   const current = items?.[index];
   const answered = current ? answers[index] !== undefined : false;
@@ -98,10 +106,20 @@ function PracticePage() {
           </div>
         ) : items && current ? (
           <div className="mt-6 space-y-5">
-            {offline ? (
-              <p className="rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground">
-                {t("practice.offlineNotice")}
-              </p>
+            {offline || starter ? (
+              <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                <p>{t(offline ? "practice.offlineNotice" : "practice.starterNotice")}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => void loadRound()}
+                >
+                  <Sparkles className="size-4" aria-hidden="true" />
+                  {t("practice.newAiRound")}
+                </Button>
+              </div>
             ) : null}
             <div
               className="flex items-center justify-between text-sm text-muted-foreground"
