@@ -498,3 +498,48 @@ export const askCheckFollowUp = createServerFn({ method: "POST" })
       throwFriendlyGatewayError(error);
     }
   });
+
+const AGENT_SYSTEM_PROMPT = `You are "ScamShield", a calm scam-safety assistant for Bangladesh, answering questions directly in the app (not about one specific check result).
+
+Rules:
+- Never ask for or accept a PIN, OTP, password or full account number. If someone offers one, tell them not to share it with anyone, including you.
+- Use only correct, real Bangladesh helplines: bKash 16247, Nagad 16167, Rocket 16207, and police/cyber crime 999.
+- Never promise that money can be recovered; say it may be possible if reported quickly.
+- When it fits, point people to the right tool in this app: the Check page (/check) to check a specific message or screenshot, or the recovery assistant (/help#recover) if they already sent money, shared a code, or replied to a scam.
+- Reply in the same language as the question (English or Bangla). Keep answers short and practical: 2-5 plain sentences, or a short list.
+- This is general safety guidance, not legal or financial advice.`;
+
+const agentChatInputSchema = z.object({
+  history: z
+    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(2000) }))
+    .max(20)
+    .default([]),
+  question: z.string().trim().min(1).max(500),
+});
+
+export const askScamAgent = createServerFn({ method: "POST" })
+  .inputValidator(agentChatInputSchema.parse)
+  .handler(async ({ data }): Promise<string> => {
+    const { createLovableAiGatewayProvider } = await import("./gateway.server");
+    const apiKey = process.env["LOVABLE_API_KEY"];
+    if (!apiKey) {
+      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
+    }
+    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
+      baseURL: GATEWAY_BASE_URL,
+    });
+
+    try {
+      const result = streamText({
+        model: provider(ANALYZE_MODEL),
+        system: AGENT_SYSTEM_PROMPT,
+        messages: [...data.history.slice(-16), { role: "user" as const, content: data.question }],
+      });
+      const text = (await result.text).trim();
+      if (!text) throw new Error("UNAVAILABLE: No answer came back. Please try again.");
+      return text;
+    } catch (error) {
+      if (error instanceof Error && /^[A-Z_]+:/.test(error.message)) throw error;
+      throwFriendlyGatewayError(error);
+    }
+  });

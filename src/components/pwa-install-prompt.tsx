@@ -59,7 +59,7 @@ export function PwaInstallPrompt() {
   if (!visible || !deferred) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-lg sm:inset-x-auto sm:right-4">
+    <div className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-lg sm:inset-x-auto sm:right-4">
       <div className="flex-1">
         <p className="text-sm font-semibold">{t("pwa.installTitle")}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">{t("pwa.installDesc")}</p>

@@ -199,6 +199,13 @@ const en: Dict = {
   "scamMap.empty": "No district-tagged reports yet for this filter.",
   "scamMap.showAll": "Show all districts",
   "scamMap.showTop": "Show top districts",
+
+  "agent.title": "Talk to ScamShield",
+  "agent.openLabel": "Ask ScamShield",
+  "agent.close": "Close chat",
+  "agent.greeting": "Ask me anything about scams in Bangladesh — how to spot them, what to do, or who to call.",
+  "agent.placeholder": "Ask about staying safe...",
+  "agent.busyMessage": "I'm a bit busy right now. In the meantime, you can check a specific message yourself, or get a recovery plan if you already replied to a scam.",
 };
 
 const bn: Dict = {
@@ -398,6 +405,13 @@ const bn: Dict = {
   "scamMap.empty": "এই ফিল্টারের জন্য এখনো কোনো জেলাভিত্তিক রিপোর্ট নেই।",
   "scamMap.showAll": "সব জেলা দেখুন",
   "scamMap.showTop": "শীর্ষ জেলাগুলো দেখুন",
+
+  "agent.title": "স্ক্যামশিল্ডের সাথে কথা বলুন",
+  "agent.openLabel": "স্ক্যামশিল্ডকে জিজ্ঞাসা করুন",
+  "agent.close": "চ্যাট বন্ধ করুন",
+  "agent.greeting": "বাংলাদেশে প্রতারণা সম্পর্কে যেকোনো প্রশ্ন করুন — কীভাবে চিনবেন, কী করবেন, বা কাকে কল করবেন।",
+  "agent.placeholder": "নিরাপদ থাকা নিয়ে জিজ্ঞাসা করুন...",
+  "agent.busyMessage": "আমি এই মুহূর্তে একটু ব্যস্ত। ততক্ষণে, আপনি নিজে একটি মেসেজ চেক করতে পারেন, অথবা আগে কোনো স্ক্যামের উত্তর দিয়ে থাকলে একটি পুনরুদ্ধার পরিকল্পনা নিতে পারেন।",
 };
 
 export const translations: Record<Lang, Dict> = { en, bn };

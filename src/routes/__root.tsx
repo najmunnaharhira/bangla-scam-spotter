@@ -16,6 +16,7 @@ import { LanguageProvider } from "@/components/language-provider";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { TalkToScamShield } from "@/components/talk-to-scamshield";
 
 function NotFoundComponent() {
   return (
@@ -141,6 +142,7 @@ function RootShell({ children }: { children: ReactNode }) {
           </main>
           <SiteFooter />
           <PwaInstallPrompt />
+          <TalkToScamShield />
         </LanguageProvider>
         <Scripts />
       </body>
