@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useLocation } from "@tanstack/react-router";
 import { Download, X } from "lucide-react";
 
 import { useLanguage } from "@/components/language-provider";
@@ -13,6 +14,7 @@ const DISMISSED_KEY = "scamshield-pwa-dismissed";
 
 export function PwaInstallPrompt() {
   const { t } = useLanguage();
+  const { pathname } = useLocation();
   const [deferred, setDeferred] = React.useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = React.useState(false);
 
@@ -56,7 +58,7 @@ export function PwaInstallPrompt() {
     setVisible(false);
   };
 
-  if (!visible || !deferred) return null;
+  if (!visible || !deferred || pathname.startsWith("/admin")) return null;
 
   return (
     <div className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-lg sm:inset-x-auto sm:right-4">

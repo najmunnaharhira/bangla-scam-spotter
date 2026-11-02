@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 
 import { useLanguage } from "@/components/language-provider";
 
@@ -14,6 +14,8 @@ const FOOTER_LINKS = [
 
 export function SiteFooter() {
   const { t } = useLanguage();
+  const { pathname } = useLocation();
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <footer className="border-t border-border bg-card">

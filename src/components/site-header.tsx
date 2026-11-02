@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useMatchRoute } from "@tanstack/react-router";
+import { Link, useLocation, useMatchRoute } from "@tanstack/react-router";
 import { Menu, ShieldCheck, X } from "lucide-react";
 
 import { BuildathonSticker } from "@/components/buildathon-sticker";
@@ -39,6 +39,8 @@ export function SiteHeader() {
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const matchRoute = useMatchRoute();
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith("/admin");
 
   // "/" must match exactly, otherwise Home would be highlighted on every page.
   const isActive = (to: string) => matchRoute({ to, fuzzy: to !== "/" }) !== false;
@@ -51,6 +53,9 @@ export function SiteHeader() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
+
+  // The admin panel has its own shell (AdminShell) — no public nav there.
+  if (isAdmin) return null;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">

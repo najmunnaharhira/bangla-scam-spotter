@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Loader2, MessageCircle, Send, X } from "lucide-react";
 
 import { useLanguage } from "@/components/language-provider";
@@ -28,6 +28,7 @@ function friendlyErrorMessage(error: unknown, genericError: string): string {
 
 export function TalkToScamShield() {
   const { t } = useLanguage();
+  const { pathname } = useLocation();
   const [open, setOpen] = React.useState(false);
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [busy, setBusy] = React.useState(false);
@@ -74,6 +75,9 @@ export function TalkToScamShield() {
       setLoading(false);
     }
   };
+
+  // Keep the admin panel distraction-free — no public chat widget there.
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3">
