@@ -16,25 +16,25 @@ export type Database = {
     Tables: {
       scam_reports: {
         Row: {
+          created_at: string
           id: string
           identifier: string
           identifier_key: string
           note: string | null
-          created_at: string
         }
         Insert: {
+          created_at?: string
           id?: string
           identifier: string
           identifier_key: string
           note?: string | null
-          created_at?: string
         }
         Update: {
+          created_at?: string
           id?: string
           identifier?: string
           identifier_key?: string
           note?: string | null
-          created_at?: string
         }
         Relationships: []
       }
