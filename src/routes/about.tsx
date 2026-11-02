@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, ShieldCheck, Sparkles, Target } from "lucide-react";
+import { useWebMCP } from "use-webmcp-tool";
 
 import { useLanguage } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { localizedGoldenRules } from "@/lib/sample-data";
+import { localizedGoldenRules, localizedScamTypes } from "@/lib/sample-data";
 
 export const Route = createFileRoute("/about")({
   component: AboutPage,
@@ -13,6 +14,19 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   const { t, lang } = useLanguage();
   const goldenRules = localizedGoldenRules(lang);
+  const scamTypes = localizedScamTypes(lang);
+
+  useWebMCP({
+    name: "get_app_info",
+    description:
+      "Returns ScamShield BD's mission, the scam types it detects, and its golden safety rules — useful for an agent that needs the app's knowledge base without scraping the page.",
+    inputSchema: { type: "object", properties: {} },
+    execute: () => {
+      const rules = goldenRules.map((r, i) => `${i + 1}. ${r}`).join("\n");
+      const types = scamTypes.map((s) => `- ${s.title}: ${s.description}`).join("\n");
+      return `ScamShield BD is a free AI scam checker for Bangladesh.\n\nScam types it detects:\n${types}\n\nGolden rules:\n${rules}`;
+    },
+  });
 
   return (
     <>

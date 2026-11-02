@@ -43,6 +43,7 @@ import { useWebMCP } from "use-webmcp-tool";
 
 import { useHistory } from "@/hooks/use-check-history";
 import { reportScamSender, useScamReportCount } from "@/hooks/use-scam-reports";
+import { DISTRICTS } from "@/lib/districts";
 import { analyzeMessage, askCheckFollowUp, explainBangla } from "@/lib/ai/scamshield.functions";
 import {
   analyzeLocally,
@@ -430,7 +431,7 @@ function CheckPage() {
             </Card>
 
             {sender.trim() && result.verdict !== "safe" ? (
-              <SenderReportWidget sender={sender.trim()} />
+              <SenderReportWidget sender={sender.trim()} channel={channel} />
             ) : null}
 
             {result.extractedText ? (
@@ -538,14 +539,19 @@ function CheckPage() {
   );
 }
 
-function SenderReportWidget({ sender }: { sender: string }) {
-  const { t, tf } = useLanguage();
+function SenderReportWidget({ sender, channel }: { sender: string; channel: string }) {
+  const { t, tf, lang } = useLanguage();
   const count = useScamReportCount(sender);
   const [status, setStatus] = React.useState<"idle" | "sending" | "sent">("idle");
+  const [district, setDistrict] = React.useState<string>("");
 
   const handleReport = async () => {
     setStatus("sending");
-    const ok = await reportScamSender(sender);
+    const ok = await reportScamSender({
+      identifier: sender,
+      channel,
+      district: district || undefined,
+    });
     setStatus(ok ? "sent" : "idle");
   };
 
@@ -556,6 +562,20 @@ function SenderReportWidget({ sender }: { sender: string }) {
           <Flag className="size-3.5" aria-hidden="true" />
           {tf("check.reportedByCount", { count })}
         </Badge>
+      ) : null}
+      {status === "idle" ? (
+        <Select value={district} onValueChange={setDistrict}>
+          <SelectTrigger className="h-9 w-auto min-w-[9rem] text-xs" aria-label={t("check.reportDistrictLabel")}>
+            <SelectValue placeholder={t("check.reportDistrictLabel")} />
+          </SelectTrigger>
+          <SelectContent>
+            {DISTRICTS.map((d) => (
+              <SelectItem key={d.id} value={d.id}>
+                {lang === "bn" ? d.bn : d.en}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       ) : null}
       <Button
         type="button"

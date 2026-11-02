@@ -11,6 +11,8 @@ import {
   ShieldAlert,
 } from "lucide-react";
 
+import { useWebMCP } from "use-webmcp-tool";
+
 import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,37 +95,98 @@ function HelpPage() {
     setError(null);
   };
 
+  /** Core recovery-plan flow, shared by the form submit handler and the WebMCP agent tool. */
+  const runPlan = React.useCallback(
+    async (report: IncidentReport): Promise<RecoveryPlan> => {
+      setLoading(true);
+      setError(null);
+      setPlan(null);
+      setOffline(false);
+      try {
+        const generated = await generateRecoverySteps({ data: report });
+        setPlan(generated);
+        setIncident(report);
+        return generated;
+      } catch (err) {
+        if (isAiUnavailable(err)) {
+          // AI is unavailable: give the built-in plan so the person is never left without steps.
+          const local = recoveryPlanLocally(report);
+          setPlan(local);
+          setIncident(report);
+          setOffline(true);
+          return local;
+        }
+        const message = friendlyErrorMessage(err, t("common.genericError"));
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setLoading(false);
+        requestAnimationFrame(() => planRef.current?.focus());
+      }
+    },
+    [t],
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    const report: IncidentReport = {
+    await runPlan({
       whatHappened: whatHappened.trim(),
       channel,
       moneySent,
       whenHappened,
       provider: provider.trim() || undefined,
-    };
-    setLoading(true);
-    setError(null);
-    setPlan(null);
-    setOffline(false);
-    try {
-      setPlan(await generateRecoverySteps({ data: report }));
-      setIncident(report);
-    } catch (err) {
-      if (isAiUnavailable(err)) {
-        // AI is unavailable: give the built-in plan so the person is never left without steps.
-        setPlan(recoveryPlanLocally(report));
-        setIncident(report);
-        setOffline(true);
-      } else {
-        setError(friendlyErrorMessage(err, t("common.genericError")));
-      }
-    } finally {
-      setLoading(false);
-      requestAnimationFrame(() => planRef.current?.focus());
-    }
+    }).catch(() => {
+      // Error state is already surfaced via setError inside runPlan.
+    });
   };
+
+  useWebMCP<{
+    what_happened: string;
+    money_sent: MoneySent;
+    when_happened: WhenHappened;
+    channel?: string;
+    provider?: string;
+  }>({
+    name: "get_recovery_plan",
+    description:
+      "Builds a personalised scam-recovery action plan on ScamShield BD's Get Help page for someone who already replied to or was affected by a scam. Fills in and submits the form, then returns urgency, the likely scam type, prioritised steps, who to report to, and follow-up scams to watch for.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        what_happened: { type: "string", description: "What happened, in the person's own words (at least 10 characters)" },
+        money_sent: {
+          type: "string",
+          enum: ["yes", "pin_otp", "no", "not_sure"],
+          description: "Whether money was sent or a PIN/OTP was shared",
+        },
+        when_happened: {
+          type: "string",
+          enum: ["last_24h", "within_week", "older", "ongoing"],
+          description: "When it happened",
+        },
+        channel: { type: "string", description: "How they were contacted, e.g. Phone call, SMS (optional)" },
+        provider: { type: "string", description: "Service involved, e.g. bKash, Nagad (optional)" },
+      },
+      required: ["what_happened", "money_sent", "when_happened"],
+    },
+    execute: async ({ what_happened, money_sent, when_happened, channel: inputChannel, provider: inputProvider }) => {
+      setWhatHappened(what_happened);
+      setMoneySent(money_sent);
+      setWhenHappened(when_happened);
+      if (inputChannel) setChannel(inputChannel);
+      if (inputProvider) setProvider(inputProvider);
+      const generated = await runPlan({
+        whatHappened: what_happened.trim(),
+        channel: inputChannel ?? channel,
+        moneySent: money_sent,
+        whenHappened: when_happened,
+        provider: inputProvider?.trim() || undefined,
+      });
+      const steps = generated.steps.map((s, i) => `${i + 1}. [${s.priority === 1 ? "now" : s.priority === 2 ? "today" : "when you can"}] ${s.title}: ${s.detail}`).join("\n");
+      return `Urgency: ${generated.urgency}\nLikely scam type: ${generated.scamType}\n${generated.whatLikelyHappened}\n\nSteps:\n${steps}\n\nReport to: ${generated.reportTo.join(", ")}`;
+    },
+  });
 
   return (
     <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">

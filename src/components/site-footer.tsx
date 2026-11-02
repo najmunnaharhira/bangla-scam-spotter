@@ -7,6 +7,7 @@ const FOOTER_LINKS = [
   { to: "/check", key: "nav.checkFull" },
   { to: "/history", key: "nav.history" },
   { to: "/practice", key: "nav.practice" },
+  { to: "/scam-map", key: "nav.scamMap" },
   { to: "/help", key: "nav.help" },
   { to: "/about", key: "nav.about" },
 ] as const;

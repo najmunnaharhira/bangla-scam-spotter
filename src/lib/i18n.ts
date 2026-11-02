@@ -186,6 +186,19 @@ const en: Dict = {
   "pwa.installDesc": "Add it to your home screen for one-tap access, like an app.",
   "pwa.install": "Install",
   "pwa.dismiss": "Not now",
+
+  "nav.scamMap": "Scam Map",
+  "check.reportDistrictLabel": "District (optional)",
+
+  "scamMap.title": "Scam reports by district",
+  "scamMap.subtitle": "Where the community's scam reports are coming from, so you can see which areas to watch.",
+  "scamMap.filterLabel": "Sender type",
+  "scamMap.allChannels": "All types",
+  "scamMap.reportsByDistrict": "Reports by district",
+  "scamMap.sourceNote": "Ranked list from community reports — not a literal map, since district boundary data isn't available here.",
+  "scamMap.empty": "No district-tagged reports yet for this filter.",
+  "scamMap.showAll": "Show all districts",
+  "scamMap.showTop": "Show top districts",
 };
 
 const bn: Dict = {
@@ -372,6 +385,19 @@ const bn: Dict = {
   "pwa.installDesc": "এক-ট্যাপে অ্যাক্সেসের জন্য এটি আপনার হোম স্ক্রিনে যোগ করুন, অ্যাপের মতো।",
   "pwa.install": "ইনস্টল করুন",
   "pwa.dismiss": "এখন না",
+
+  "nav.scamMap": "স্ক্যাম মানচিত্র",
+  "check.reportDistrictLabel": "জেলা (ঐচ্ছিক)",
+
+  "scamMap.title": "জেলাভিত্তিক স্ক্যাম রিপোর্ট",
+  "scamMap.subtitle": "কমিউনিটির স্ক্যাম রিপোর্ট কোথা থেকে আসছে, যাতে আপনি কোন এলাকাগুলোতে সতর্ক থাকবেন তা দেখতে পারেন।",
+  "scamMap.filterLabel": "প্রেরকের ধরন",
+  "scamMap.allChannels": "সব ধরন",
+  "scamMap.reportsByDistrict": "জেলাভিত্তিক রিপোর্ট",
+  "scamMap.sourceNote": "কমিউনিটি রিপোর্ট থেকে তৈরি একটি তালিকা — প্রকৃত মানচিত্র নয়, কারণ এখানে জেলার সীমানার তথ্য উপলব্ধ নেই।",
+  "scamMap.empty": "এই ফিল্টারের জন্য এখনো কোনো জেলাভিত্তিক রিপোর্ট নেই।",
+  "scamMap.showAll": "সব জেলা দেখুন",
+  "scamMap.showTop": "শীর্ষ জেলাগুলো দেখুন",
 };
 
 export const translations: Record<Lang, Dict> = { en, bn };

@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { to: "/history", key: "nav.history" },
   { to: "/practice", key: "nav.practice" },
   { to: "/help", key: "nav.help" },
+  { to: "/scam-map", key: "nav.scamMap" },
   { to: "/about", key: "nav.about" },
 ] as const;
 

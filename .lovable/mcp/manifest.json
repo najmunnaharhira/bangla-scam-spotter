@@ -47,14 +47,57 @@
       {
         "name": "get_practice_round",
         "title": "Get a scam-spotting practice round",
-        "description": "Generates a round of 5 short practice messages (a mix of real Bangladeshi scam patterns and genuine messages) for a 'spot the scam' quiz, used to train scam awareness.",
+        "description": "Generates a round of 5 short practice messages (a mix of real Bangladeshi scam patterns and genuine messages) for ScamShield BD's 'Scam Spotter' quiz, used to train scam awareness. Returns structured items the Practice page renders directly.",
         "inputSchema": {
           "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {},
           "additionalProperties": false
         },
-        "outputSchema": null
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string"
+                  },
+                  "isScam": {
+                    "type": "boolean"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  },
+                  "redFlags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "message",
+                  "isScam",
+                  "explanation",
+                  "redFlags"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "offline": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "items",
+            "offline"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
       },
       {
         "name": "report_scam_sender",
@@ -73,6 +116,81 @@
               "type": "string",
               "maxLength": 500,
               "description": "Optional short note about what happened"
+            },
+            "district": {
+              "type": "string",
+              "enum": [
+                "barguna",
+                "barishal",
+                "bhola",
+                "jhalokati",
+                "patuakhali",
+                "pirojpur",
+                "bandarban",
+                "brahmanbaria",
+                "chandpur",
+                "chattogram",
+                "cumilla",
+                "coxs_bazar",
+                "feni",
+                "khagrachhari",
+                "lakshmipur",
+                "noakhali",
+                "rangamati",
+                "dhaka",
+                "faridpur",
+                "gazipur",
+                "gopalganj",
+                "kishoreganj",
+                "madaripur",
+                "manikganj",
+                "munshiganj",
+                "narayanganj",
+                "narsingdi",
+                "rajbari",
+                "shariatpur",
+                "tangail",
+                "bagerhat",
+                "chuadanga",
+                "jashore",
+                "jhenaidah",
+                "khulna",
+                "kushtia",
+                "magura",
+                "meherpur",
+                "narail",
+                "satkhira",
+                "jamalpur",
+                "mymensingh",
+                "netrokona",
+                "sherpur",
+                "bogura",
+                "chapainawabganj",
+                "joypurhat",
+                "naogaon",
+                "natore",
+                "pabna",
+                "rajshahi",
+                "sirajganj",
+                "dinajpur",
+                "gaibandha",
+                "kurigram",
+                "lalmonirhat",
+                "nilphamari",
+                "panchagarh",
+                "rangpur",
+                "thakurgaon",
+                "habiganj",
+                "moulvibazar",
+                "sunamganj",
+                "sylhet"
+              ],
+              "description": "The Bangladesh district the report is from, as a district id (e.g. 'dhaka', 'chattogram')"
+            },
+            "channel": {
+              "type": "string",
+              "maxLength": 40,
+              "description": "How the scam arrived: SMS, WhatsApp, Messenger, Email, Phone call, Website, or Other"
             }
           },
           "required": [
@@ -104,6 +222,56 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "get_district_scam_stats",
+        "title": "Get scam report counts by district",
+        "description": "Returns how many community scam reports exist per Bangladesh district, most-reported first, optionally filtered by channel (sender type: SMS, WhatsApp, Messenger, Email, Phone call, Website, or Other). Backs ScamShield BD's district reports view.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "channel": {
+              "type": "string",
+              "maxLength": 40,
+              "description": "Filter to only this channel, e.g. 'SMS' or 'Phone call'"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "districts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "district": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "district",
+                  "label",
+                  "count"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "districts"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
       }
     ]
   }

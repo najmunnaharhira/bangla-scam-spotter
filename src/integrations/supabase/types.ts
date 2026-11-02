@@ -16,21 +16,27 @@ export type Database = {
     Tables: {
       scam_reports: {
         Row: {
+          channel: string | null
           created_at: string
+          district: string | null
           id: string
           identifier: string
           identifier_key: string
           note: string | null
         }
         Insert: {
+          channel?: string | null
           created_at?: string
+          district?: string | null
           id?: string
           identifier: string
           identifier_key: string
           note?: string | null
         }
         Update: {
+          channel?: string | null
           created_at?: string
+          district?: string | null
           id?: string
           identifier?: string
           identifier_key?: string
