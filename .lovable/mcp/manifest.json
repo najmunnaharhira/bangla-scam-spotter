@@ -191,6 +191,11 @@
               "type": "string",
               "maxLength": 40,
               "description": "How the scam arrived: SMS, WhatsApp, Messenger, Email, Phone call, Website, or Other"
+            },
+            "scam_type": {
+              "type": "string",
+              "maxLength": 80,
+              "description": "The scam category, e.g. from check_message's result (e.g. 'Fake MFS wrong send', 'OTP theft')"
             }
           },
           "required": [
@@ -268,6 +273,46 @@
           },
           "required": [
             "districts"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+      },
+      {
+        "name": "get_trending_scam_types",
+        "title": "Get trending scam types",
+        "description": "Returns the most-reported scam categories across ScamShield BD's community reports, most common first (e.g. fake MFS wrong-send, OTP theft, fake job offers). Backs the Scam Map's trending section.",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": {
+          "type": "object",
+          "properties": {
+            "types": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "scamType": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "scamType",
+                  "count"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "types"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"

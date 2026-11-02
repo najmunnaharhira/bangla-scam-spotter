@@ -27,9 +27,14 @@ export default defineTool({
       .max(40)
       .optional()
       .describe("How the scam arrived: SMS, WhatsApp, Messenger, Email, Phone call, Website, or Other"),
+    scam_type: z
+      .string()
+      .max(80)
+      .optional()
+      .describe("The scam category, e.g. from check_message's result (e.g. 'Fake MFS wrong send', 'OTP theft')"),
   },
-  handler: async ({ identifier, note, district, channel }) => {
-    const ok = await reportScamSender({ identifier, note, district, channel });
+  handler: async ({ identifier, note, district, channel, scam_type }) => {
+    const ok = await reportScamSender({ identifier, note, district, channel, scamType: scam_type });
     if (!ok) throw new ToolError("Could not save the report. Try again shortly.");
     return {
       content: [

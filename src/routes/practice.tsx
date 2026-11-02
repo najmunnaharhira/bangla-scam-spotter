@@ -1,7 +1,9 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  Award,
   CheckCircle2,
+  Flame,
   Loader2,
   RefreshCw,
   ShieldAlert,
@@ -16,6 +18,7 @@ import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePracticeStreak } from "@/hooks/use-practice-streak";
 import { FALLBACK_PRACTICE } from "@/lib/local-analyzer";
 import { callMcpTool } from "@/lib/mcp-client";
 import type { PracticeItem } from "@/lib/types";
@@ -85,6 +88,18 @@ function PracticePage() {
 
   const roundDone = items != null && Object.keys(answers).length === items.length;
 
+  const streak = usePracticeStreak();
+  const recordedRoundRef = React.useRef(false);
+  React.useEffect(() => {
+    recordedRoundRef.current = false;
+  }, [items]);
+  React.useEffect(() => {
+    if (roundDone && !recordedRoundRef.current) {
+      recordedRoundRef.current = true;
+      streak.recordRound(score);
+    }
+  }, [roundDone, score, streak]);
+
   useWebMCP<{ is_scam: boolean }>({
     name: "answer_practice_question",
     description:
@@ -122,6 +137,21 @@ function PracticePage() {
       <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t("practice.title")}</h1>
         <p className="mt-2 text-muted-foreground">{t("practice.subtitle")}</p>
+
+        {streak.hydrated && (streak.current > 0 || streak.correctTotal > 0) ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+            <Badge variant="outline" className="gap-1.5">
+              <Flame className="size-3.5 text-suspicious" aria-hidden="true" />
+              {tf("practice.streakDays", { count: streak.current })}
+            </Badge>
+            {streak.earnedBadges.map((b) => (
+              <Badge key={b.id} variant="secondary" className="gap-1.5">
+                <Award className="size-3.5" aria-hidden="true" />
+                {t(`practice.badge.${b.id}`)}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="mt-10 flex flex-col items-center gap-3 py-16 text-muted-foreground">

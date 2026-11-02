@@ -9,6 +9,8 @@ import {
   Info,
   Languages,
   Loader2,
+  Mic,
+  MicOff,
   MessageCircleQuestion,
   Send,
   Share2,
@@ -43,6 +45,7 @@ import { useWebMCP } from "use-webmcp-tool";
 
 import { useHistory } from "@/hooks/use-check-history";
 import { reportScamSender, useScamReportCount } from "@/hooks/use-scam-reports";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { DISTRICTS } from "@/lib/districts";
 import { analyzeMessage, askCheckFollowUp, explainBangla } from "@/lib/ai/scamshield.functions";
 import {
@@ -109,8 +112,21 @@ function CheckPage() {
   const [copied, setCopied] = React.useState(false);
   const resultRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const voiceBaseRef = React.useRef("");
+  const speech = useSpeechRecognition(lang);
 
   const { add } = useHistory();
+
+  // Share-to-ScamShield: a phone's native Share sheet lands here with
+  // ?text=/?title=/?url= (manifest.webmanifest's share_target). Pre-fill once.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shared = params.get("text") || params.get("title") || params.get("url");
+    if (shared) {
+      setText(shared);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
   const canSubmit = (text.trim().length > 0 || image != null) && !loading;
 
@@ -289,7 +305,33 @@ function CheckPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="message-text">{t("check.messageTextLabel")}</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="message-text">{t("check.messageTextLabel")}</Label>
+              {speech.supported ? (
+                <Button
+                  type="button"
+                  variant={speech.listening ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    if (speech.listening) {
+                      speech.stop();
+                      return;
+                    }
+                    voiceBaseRef.current = text ? `${text} ` : "";
+                    speech.start((chunk) => {
+                      setText(chunk ? `${voiceBaseRef.current}${chunk}` : voiceBaseRef.current);
+                    });
+                  }}
+                >
+                  {speech.listening ? (
+                    <MicOff className="size-3.5" aria-hidden="true" />
+                  ) : (
+                    <Mic className="size-3.5" aria-hidden="true" />
+                  )}
+                  {speech.listening ? t("check.voiceListening") : t("check.voiceInput")}
+                </Button>
+              ) : null}
+            </div>
             <Textarea
               id="message-text"
               value={text}
@@ -431,7 +473,7 @@ function CheckPage() {
             </Card>
 
             {sender.trim() && result.verdict !== "safe" ? (
-              <SenderReportWidget sender={sender.trim()} channel={channel} />
+              <SenderReportWidget sender={sender.trim()} channel={channel} scamType={result.scamType} />
             ) : null}
 
             {result.extractedText ? (
@@ -539,7 +581,15 @@ function CheckPage() {
   );
 }
 
-function SenderReportWidget({ sender, channel }: { sender: string; channel: string }) {
+function SenderReportWidget({
+  sender,
+  channel,
+  scamType,
+}: {
+  sender: string;
+  channel: string;
+  scamType: string;
+}) {
   const { t, tf, lang } = useLanguage();
   const count = useScamReportCount(sender);
   const [status, setStatus] = React.useState<"idle" | "sending" | "sent">("idle");
@@ -551,6 +601,7 @@ function SenderReportWidget({ sender, channel }: { sender: string; channel: stri
       identifier: sender,
       channel,
       district: district || undefined,
+      scamType,
     });
     setStatus(ok ? "sent" : "idle");
   };

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin, TrendingUp } from "lucide-react";
 
 import { useLanguage } from "@/components/language-provider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,6 +22,80 @@ export const Route = createFileRoute("/scam-map")({
 interface DistrictStat {
   district: string;
   count: number;
+}
+
+interface ScamTypeStat {
+  scamType: string;
+  count: number;
+}
+
+function TrendingScamTypes() {
+  const { t } = useLanguage();
+  const [types, setTypes] = React.useState<ScamTypeStat[] | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    callMcpTool<{ types: ScamTypeStat[] }>("get_trending_scam_types")
+      .then(({ structured }) => {
+        if (!cancelled) setTypes(structured?.types ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setTypes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const max = types && types.length > 0 ? types[0]!.count : 0;
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <TrendingUp className="size-4 text-primary" aria-hidden="true" />
+          {t("scamMap.trendingTypes")}
+        </CardTitle>
+        <CardDescription>{t("scamMap.trendingNote")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+          </div>
+        ) : !types || types.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">{t("scamMap.trendingEmpty")}</p>
+        ) : (
+          <table className="w-full border-collapse text-sm">
+            <caption className="sr-only">{t("scamMap.trendingTypes")}</caption>
+            <tbody>
+              {types.map((row) => (
+                <tr key={row.scamType} className="align-middle">
+                  <th scope="row" className="w-40 truncate pr-3 py-1.5 text-left font-medium text-foreground">
+                    {row.scamType}
+                  </th>
+                  <td className="py-1.5">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-3 rounded-full bg-suspicious"
+                        style={{ width: `${max > 0 ? Math.max(4, (row.count / max) * 100) : 0}%` }}
+                        aria-hidden="true"
+                      />
+                      <span className="shrink-0 tabular-nums text-muted-foreground">{row.count}</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function ScamMapPage() {
@@ -139,6 +213,8 @@ function ScamMapPage() {
           ) : null}
         </CardContent>
       </Card>
+
+      <TrendingScamTypes />
     </section>
   );
 }

@@ -23,6 +23,7 @@ export type Database = {
           identifier: string
           identifier_key: string
           note: string | null
+          scam_type: string | null
         }
         Insert: {
           channel?: string | null
@@ -32,6 +33,7 @@ export type Database = {
           identifier: string
           identifier_key: string
           note?: string | null
+          scam_type?: string | null
         }
         Update: {
           channel?: string | null
@@ -41,6 +43,7 @@ export type Database = {
           identifier?: string
           identifier_key?: string
           note?: string | null
+          scam_type?: string | null
         }
         Relationships: []
       }

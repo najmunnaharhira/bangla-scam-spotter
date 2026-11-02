@@ -85,6 +85,8 @@ const en: Dict = {
   "check.shareWhatsapp": "Share on WhatsApp",
   "check.riskScoreLabel": "risk score / 100",
   "check.offlineNotice": "The AI service is busy right now, so this is a quick check using known scam patterns. Try again in a minute for a full AI analysis.",
+  "check.voiceInput": "Speak",
+  "check.voiceListening": "Listening...",
 
   "practice.title": "Scam Spotter practice",
   "practice.subtitle": "Read each message and guess: is it a scam or genuine? Learn the red flags as you go.",
@@ -199,6 +201,9 @@ const en: Dict = {
   "scamMap.empty": "No district-tagged reports yet for this filter.",
   "scamMap.showAll": "Show all districts",
   "scamMap.showTop": "Show top districts",
+  "scamMap.trendingTypes": "Trending scam types",
+  "scamMap.trendingNote": "The most-reported scam categories, from the AI's own classification of each reported message.",
+  "scamMap.trendingEmpty": "No scam-type-tagged reports yet.",
 
   "agent.title": "Talk to ScamShield",
   "agent.openLabel": "Ask ScamShield",
@@ -206,6 +211,13 @@ const en: Dict = {
   "agent.greeting": "Ask me anything about scams in Bangladesh — how to spot them, what to do, or who to call.",
   "agent.placeholder": "Ask about staying safe...",
   "agent.busyMessage": "I'm a bit busy right now. In the meantime, you can check a specific message yourself, or get a recovery plan if you already replied to a scam.",
+
+  "practice.streakDays": "{count}-day streak",
+  "practice.badge.streak_3": "3-day streak",
+  "practice.badge.streak_7": "7-day streak",
+  "practice.badge.streak_30": "30-day streak",
+  "practice.badge.answers_25": "25 correct",
+  "practice.badge.answers_100": "100 correct",
 };
 
 const bn: Dict = {
@@ -291,6 +303,8 @@ const bn: Dict = {
   "check.shareWhatsapp": "হোয়াটসঅ্যাপে শেয়ার করুন",
   "check.riskScoreLabel": "ঝুঁকি স্কোর / ১০০",
   "check.offlineNotice": "এআই সেবা এই মুহূর্তে ব্যস্ত, তাই এটি পরিচিত প্রতারণার ধরণ ব্যবহার করে একটি দ্রুত চেক। সম্পূর্ণ এআই বিশ্লেষণের জন্য এক মিনিট পর আবার চেষ্টা করুন।",
+  "check.voiceInput": "বলুন",
+  "check.voiceListening": "শোনা হচ্ছে...",
 
   "practice.title": "স্ক্যাম স্পটার প্র্যাকটিস",
   "practice.subtitle": "প্রতিটি মেসেজ পড়ুন এবং অনুমান করুন: এটি প্রতারণা নাকি আসল? এগিয়ে যাওয়ার সাথে সাথে বিপদ সংকেত শিখুন।",
@@ -405,6 +419,9 @@ const bn: Dict = {
   "scamMap.empty": "এই ফিল্টারের জন্য এখনো কোনো জেলাভিত্তিক রিপোর্ট নেই।",
   "scamMap.showAll": "সব জেলা দেখুন",
   "scamMap.showTop": "শীর্ষ জেলাগুলো দেখুন",
+  "scamMap.trendingTypes": "জনপ্রিয় প্রতারণার ধরন",
+  "scamMap.trendingNote": "প্রতিটি রিপোর্ট করা মেসেজের এআই-এর নিজস্ব শ্রেণীবিভাগ থেকে সবচেয়ে বেশি রিপোর্ট হওয়া প্রতারণার ধরনগুলো।",
+  "scamMap.trendingEmpty": "এখনো কোনো প্রতারণার ধরন-ট্যাগ করা রিপোর্ট নেই।",
 
   "agent.title": "স্ক্যামশিল্ডের সাথে কথা বলুন",
   "agent.openLabel": "স্ক্যামশিল্ডকে জিজ্ঞাসা করুন",
@@ -412,6 +429,13 @@ const bn: Dict = {
   "agent.greeting": "বাংলাদেশে প্রতারণা সম্পর্কে যেকোনো প্রশ্ন করুন — কীভাবে চিনবেন, কী করবেন, বা কাকে কল করবেন।",
   "agent.placeholder": "নিরাপদ থাকা নিয়ে জিজ্ঞাসা করুন...",
   "agent.busyMessage": "আমি এই মুহূর্তে একটু ব্যস্ত। ততক্ষণে, আপনি নিজে একটি মেসেজ চেক করতে পারেন, অথবা আগে কোনো স্ক্যামের উত্তর দিয়ে থাকলে একটি পুনরুদ্ধার পরিকল্পনা নিতে পারেন।",
+
+  "practice.streakDays": "{count} দিনের ধারাবাহিকতা",
+  "practice.badge.streak_3": "৩ দিনের ধারাবাহিকতা",
+  "practice.badge.streak_7": "৭ দিনের ধারাবাহিকতা",
+  "practice.badge.streak_30": "৩০ দিনের ধারাবাহিকতা",
+  "practice.badge.answers_25": "২৫টি সঠিক",
+  "practice.badge.answers_100": "১০০টি সঠিক",
 };
 
 export const translations: Record<Lang, Dict> = { en, bn };

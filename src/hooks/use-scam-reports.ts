@@ -49,6 +49,7 @@ export interface ReportScamSenderInput {
   note?: string | undefined;
   district?: string | undefined;
   channel?: string | undefined;
+  scamType?: string | undefined;
 }
 
 export async function reportScamSender(input: ReportScamSenderInput): Promise<boolean> {
@@ -60,6 +61,7 @@ export async function reportScamSender(input: ReportScamSenderInput): Promise<bo
     note: input.note?.trim() ? input.note.trim().slice(0, 500) : null,
     district: input.district?.trim() ? input.district.trim().slice(0, 60) : null,
     channel: input.channel?.trim() ? input.channel.trim().slice(0, 40) : null,
+    scam_type: input.scamType?.trim() ? input.scamType.trim().slice(0, 80) : null,
   });
   return !error;
 }
@@ -86,4 +88,27 @@ export async function getDistrictReportCounts(channel?: string): Promise<Distric
   return Array.from(counts.entries())
     .map(([district, count]) => ({ district, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+export interface ScamTypeCount {
+  scamType: string;
+  count: number;
+}
+
+/** Most-reported scam types, derived from the AI's classification of each
+ * reported message at the moment it was reported (no separate category
+ * input needed from the user). */
+export async function getTrendingScamTypes(limit = 10): Promise<ScamTypeCount[]> {
+  const { data, error } = await supabase.from("scam_reports").select("scam_type").not("scam_type", "is", null);
+  if (error || !data) return [];
+  const counts = new Map<string, number>();
+  for (const row of data) {
+    const scamType = row.scam_type;
+    if (!scamType) continue;
+    counts.set(scamType, (counts.get(scamType) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([scamType, count]) => ({ scamType, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
 }
