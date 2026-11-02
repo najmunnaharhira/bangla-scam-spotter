@@ -39,6 +39,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useWebMCP } from "use-webmcp-tool";
+
 import { useHistory } from "@/hooks/use-check-history";
 import { reportScamSender, useScamReportCount } from "@/hooks/use-scam-reports";
 import { analyzeMessage, askCheckFollowUp, explainBangla } from "@/lib/ai/scamshield.functions";
@@ -131,51 +133,104 @@ function CheckPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  /** Core check flow, shared by the form submit handler and the WebMCP agent tool. */
+  const runCheck = React.useCallback(
+    async (input: {
+      text: string;
+      sender?: string | undefined;
+      channel?: string | undefined;
+      imageBase64?: string | undefined;
+      imageMimeType?: string | undefined;
+    }): Promise<AnalysisResult> => {
+      setLoading(true);
+      setError(null);
+      setResult(null);
+      setBangla(null);
+      setOffline(false);
+      setCopied(false);
+      const trimmed = input.text.trim();
+      const save = (analysis: AnalysisResult) => {
+        setResult(analysis);
+        add({
+          id: `${Date.now()}`,
+          createdAt: Date.now(),
+          inputType: input.imageBase64 ? "image" : "text",
+          preview: trimmed || analysis.extractedText || "Screenshot check",
+          result: analysis,
+        } satisfies CheckRecord);
+        // Move focus to the result so screen readers and keyboard users land on it.
+        requestAnimationFrame(() => resultRef.current?.focus());
+      };
+      try {
+        const analysis = await analyzeMessage({
+          data: {
+            text: trimmed || undefined,
+            imageBase64: input.imageBase64,
+            imageMimeType: input.imageMimeType,
+            sender: input.sender?.trim() || undefined,
+            channel: input.channel,
+          },
+        });
+        save(analysis);
+        return analysis;
+      } catch (err) {
+        if (trimmed && isAiUnavailable(err)) {
+          // AI is down or out of credits: fall back to the built-in pattern check.
+          setOffline(true);
+          const analysis = analyzeLocally(trimmed);
+          save(analysis);
+          return analysis;
+        }
+        const message = friendlyErrorMessage(err, t("common.genericError"));
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [add, t],
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    setBangla(null);
-    setOffline(false);
-    setCopied(false);
-    const trimmed = text.trim();
-    const save = (analysis: AnalysisResult) => {
-      setResult(analysis);
-      add({
-        id: `${Date.now()}`,
-        createdAt: Date.now(),
-        inputType: image ? "image" : "text",
-        preview: trimmed || analysis.extractedText || "Screenshot check",
-        result: analysis,
-      } satisfies CheckRecord);
-      // Move focus to the result so screen readers and keyboard users land on it.
-      requestAnimationFrame(() => resultRef.current?.focus());
-    };
-    try {
-      const analysis = await analyzeMessage({
-        data: {
-          text: trimmed || undefined,
-          imageBase64: image?.base64,
-          imageMimeType: image?.file.type,
-          sender: sender.trim() || undefined,
-          channel,
-        },
-      });
-      save(analysis);
-    } catch (err) {
-      if (trimmed && isAiUnavailable(err)) {
-        // AI is down or out of credits: fall back to the built-in pattern check.
-        setOffline(true);
-        save(analyzeLocally(trimmed));
-      } else {
-        setError(friendlyErrorMessage(err, t("common.genericError")));
-      }
-    } finally {
-      setLoading(false);
-    }
+    await runCheck({
+      text,
+      sender,
+      channel,
+      imageBase64: image?.base64,
+      imageMimeType: image?.file.type,
+    }).catch(() => {
+      // Error state is already surfaced via setError inside runCheck.
+    });
   };
+
+  useWebMCP<{ text: string; sender?: string; channel?: string }>({
+    name: "check_message",
+    description:
+      "Check a suspicious message (SMS, Messenger, email, or call description) for Bangladeshi scam patterns on ScamShield BD. Fills in and submits the Check form, then returns the risk verdict, score, red flags, and next steps.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        text: { type: "string", description: "The message text to check" },
+        sender: { type: "string", description: "Who sent it, e.g. a phone number or name (optional)" },
+        channel: {
+          type: "string",
+          description: "How it was sent: SMS, WhatsApp, Messenger, Email, Phone call, Website, or Other (optional)",
+        },
+      },
+      required: ["text"],
+    },
+    execute: async ({ text: inputText, sender: inputSender, channel: inputChannel }) => {
+      setText(inputText);
+      if (inputSender) setSender(inputSender);
+      if (inputChannel) setChannel(inputChannel);
+      const analysis = await runCheck({ text: inputText, sender: inputSender, channel: inputChannel });
+      const flags = analysis.redFlags.map((f) => `- "${f.quote}": ${f.reason}`).join("\n");
+      const steps = analysis.nextSteps.map((s) => `- ${s}`).join("\n");
+      return `Verdict: ${analysis.verdict} (risk ${analysis.riskScore}/100)\n${analysis.summary}${flags ? `\n\nRed flags:\n${flags}` : ""}${steps ? `\n\nNext steps:\n${steps}` : ""}`;
+    },
+  });
 
   const handleExplainBangla = async () => {
     if (!result) return;

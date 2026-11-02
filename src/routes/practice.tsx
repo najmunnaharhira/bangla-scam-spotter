@@ -10,6 +10,8 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { useWebMCP } from "use-webmcp-tool";
+
 import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,6 +82,38 @@ function PracticePage() {
   };
 
   const roundDone = items != null && Object.keys(answers).length === items.length;
+
+  useWebMCP<{ is_scam: boolean }>({
+    name: "answer_practice_question",
+    description:
+      "Answers the current message in ScamShield BD's Scam Spotter practice game, guessing whether it's a scam or genuine, and returns whether the guess was correct plus the explanation and red flags.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        is_scam: { type: "boolean", description: "True to guess 'scam', false to guess 'genuine'" },
+      },
+      required: ["is_scam"],
+    },
+    enabled: !!current && !answered,
+    execute: ({ is_scam }) => {
+      if (!current) throw new Error("No practice message is loaded right now.");
+      guess(is_scam);
+      const correct = is_scam === current.isScam;
+      const flags = current.redFlags.length ? `\nRed flags: ${current.redFlags.join("; ")}` : "";
+      return `${correct ? "Correct" : "Not quite"} — this message is ${current.isScam ? "a scam" : "genuine"}. ${current.explanation}${flags}`;
+    },
+  });
+
+  useWebMCP({
+    name: "next_practice_message",
+    description: "Advances to the next message in the current Scam Spotter practice round.",
+    inputSchema: { type: "object", properties: {} },
+    enabled: answered && !roundDone,
+    execute: () => {
+      next();
+      return "Moved to the next practice message.";
+    },
+  });
 
   return (
     <>

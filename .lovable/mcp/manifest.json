@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "sdk_version": "3.4.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "scamshield-bd-mcp",
+      "version": "1.0.0",
+      "title": "ScamShield BD"
+    },
+    "tools": [
+      {
+        "name": "check_message",
+        "title": "Check a message for scams",
+        "description": "Analyzes a suspicious SMS, Messenger, email or phone-call description for Bangladeshi scam patterns (fake bKash/Nagad 'wrong send' transfers, OTP/PIN theft, fake job offers, lottery wins, phishing links, impersonation) and returns a risk verdict, a 0-100 risk score, the exact red flags, and next steps.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "The message text to check"
+            },
+            "sender": {
+              "type": "string",
+              "maxLength": 120,
+              "description": "Who sent it, e.g. a phone number or name"
+            },
+            "channel": {
+              "type": "string",
+              "maxLength": 40,
+              "description": "How it was sent: SMS, WhatsApp, Messenger, Email, Phone call, Website, or Other"
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_practice_round",
+        "title": "Get a scam-spotting practice round",
+        "description": "Generates a round of 5 short practice messages (a mix of real Bangladeshi scam patterns and genuine messages) for a 'spot the scam' quiz, used to train scam awareness.",
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "report_scam_sender",
+        "title": "Report a scam sender",
+        "description": "Flags a phone number, bKash/Nagad account number, or sender name as a scam source in ScamShield BD's public community database, so future checks warn other users. No login required.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "identifier": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 120,
+              "description": "The phone number, account number, or sender name to report"
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 500,
+              "description": "Optional short note about what happened"
+            }
+          },
+          "required": [
+            "identifier"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "lookup_scam_reports",
+        "title": "Look up scam reports for a sender",
+        "description": "Checks how many times a phone number, account number, or sender name has already been reported as a scam by the ScamShield BD community.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "identifier": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 120,
+              "description": "The phone number, account number, or sender name to look up"
+            }
+          },
+          "required": [
+            "identifier"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

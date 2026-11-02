@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as CheckRouteImport } from './routes/check'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -43,6 +44,11 @@ const HistoryRoute = HistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/check': typeof CheckRoute
   '/help': typeof HelpRoute
   '/history': typeof HistoryRoute
+  '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/check': typeof CheckRoute
   '/help': typeof HelpRoute
   '/history': typeof HistoryRoute
+  '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/check': typeof CheckRoute
   '/help': typeof HelpRoute
   '/history': typeof HistoryRoute
+  '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/check'
     | '/help'
     | '/history'
+    | '/mcp'
     | '/practice'
     | '/admin/login'
     | '/admin/'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/check'
     | '/help'
     | '/history'
+    | '/mcp'
     | '/practice'
     | '/admin/login'
     | '/admin'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/check'
     | '/help'
     | '/history'
+    | '/mcp'
     | '/practice'
     | '/admin/login'
     | '/admin/'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   CheckRoute: typeof CheckRoute
   HelpRoute: typeof HelpRoute
   HistoryRoute: typeof HistoryRoute
+  McpRoute: typeof McpRoute
   PracticeRoute: typeof PracticeRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice': {
       id: '/practice'
       path: '/practice'
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckRoute: CheckRoute,
   HelpRoute: HelpRoute,
   HistoryRoute: HistoryRoute,
+  McpRoute: McpRoute,
   PracticeRoute: PracticeRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,

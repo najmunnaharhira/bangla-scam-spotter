@@ -32,6 +32,18 @@ export function useScamReportCount(identifier: string | undefined) {
   return count;
 }
 
+/** Non-hook version for use outside React (e.g. the MCP server's lookup tool). */
+export async function getScamReportCount(identifier: string): Promise<number> {
+  const trimmed = identifier.trim();
+  if (!trimmed) return 0;
+  const { count, error } = await supabase
+    .from("scam_reports")
+    .select("id", { count: "exact", head: true })
+    .eq("identifier_key", normalizeIdentifier(trimmed));
+  if (error) return 0;
+  return count ?? 0;
+}
+
 export async function reportScamSender(identifier: string, note?: string): Promise<boolean> {
   const trimmed = identifier.trim();
   if (trimmed.length < 3) return false;

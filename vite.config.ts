@@ -6,6 +6,13 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// NOTE: @lovable.dev/mcp-js/stacks/tanstack/vite's mcpPlugin() is not used here —
+// its configResolved hook has a Windows-only bug (mixes Vite's posix-normalized
+// config.root with Node's native-separator path.resolve output, so its own
+// containment check always throws on Windows). src/routes/mcp.ts is hand-written
+// instead, using the same createTanStackMcpHandler the plugin would have wired up
+// (see src/lib/mcp/index.ts for the actual tool definitions). Revisit once a
+// release past 3.4.0 fixes the path handling.
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
