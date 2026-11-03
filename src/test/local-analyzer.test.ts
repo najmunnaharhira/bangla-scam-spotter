@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { analyzeLocally, isAiUnavailable, recoveryPlanLocally } from "@/lib/local-analyzer";
+import { analyzeLocally, isAiUnavailable, recoveryPlanLocally, scamAgentLocally } from "@/lib/local-analyzer";
 import { EXAMPLE_CHIPS } from "@/lib/sample-data";
 
 const example = (id: string) => EXAMPLE_CHIPS.find((chip) => chip.id === id)!.text;
@@ -43,5 +43,10 @@ describe("local scam analyzer fallback", () => {
   it("treats input errors as real errors, not AI outages", () => {
     expect(isAiUnavailable(new Error("TOO_BIG: too large"))).toBe(false);
     expect(isAiUnavailable(new Error("NO_CREDITS: out of credits"))).toBe(true);
+  });
+
+  it("answers scam-spotting questions without an AI provider", () => {
+    expect(scamAgentLocally("how to spot them")).toContain("Common scam signs");
+    expect(scamAgentLocally("স্ক্যাম কীভাবে চিনব?")).toContain("স্ক্যামের সাধারণ লক্ষণ");
   });
 });

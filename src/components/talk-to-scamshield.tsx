@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { askScamAgent } from "@/lib/ai/scamshield.functions";
+import { isAiUnavailable, scamAgentLocally } from "@/lib/local-analyzer";
 import { cn } from "@/lib/utils";
 
 interface ChatMessage {
@@ -65,6 +66,8 @@ export function TalkToScamShield() {
       if (isBusyError(err)) {
         setBusy(true);
         setMessages((prev) => [...prev, { role: "assistant", content: t("agent.busyMessage") }]);
+      } else if (isAiUnavailable(err)) {
+        setMessages((prev) => [...prev, { role: "assistant", content: scamAgentLocally(q) }]);
       } else {
         setMessages((prev) => [
           ...prev,

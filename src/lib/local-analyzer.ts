@@ -289,6 +289,33 @@ export function checkFollowUpLocally(result: AnalysisResult): string {
   return `The AI assistant is busy right now, so I can't answer this question in detail. Based on the check: ${result.summary} ${first ? `The most important step is: ${first}` : ""} Please try your question again in a minute.`;
 }
 
+/** Always-available safety guidance for the floating chat when no AI provider
+ * is configured. It intentionally answers only the app's narrow safety scope. */
+export function scamAgentLocally(question: string): string {
+  const q = question.trim().toLowerCase();
+  const bangla = /[\u0980-\u09ff]/.test(question);
+  const emergency = /(sent|send|lost|paid|transfer|otp|pin|password|click|হয়েছে|পাঠিয়েছি|টাকা|ওটিপি|পিন)/i.test(q);
+  const spotting = /(spot|identify|recogn|sign|tell|detect|avoid|চিনব|বুঝব|লক্ষণ|এড়াব)/i.test(q);
+
+  if (bangla) {
+    if (emergency) {
+      return "এখনই আর কোনো টাকা, PIN বা OTP দেবেন না। bKash হলে 16247, Nagad হলে 16167, Rocket হলে 16207 নম্বরে ফোন করে লেনদেন বন্ধ বা ফেরত দেওয়ার অনুরোধ করুন। PIN বদলান, প্রমাণের ছবি রাখুন এবং জরুরি হলে 999 নম্বরে জানান। পরে কেউ ‘টাকা উদ্ধার’ করার নামে ফি চাইলে দেবেন না।";
+    }
+    if (spotting) {
+      return "স্ক্যামের সাধারণ লক্ষণ হলো হঠাৎ পুরস্কার বা চাকরির প্রস্তাব, খুব দ্রুত কাজ করার চাপ, আগে টাকা চাওয়া, সন্দেহজনক লিংক, এবং PIN বা OTP চাওয়া। পরিচিত প্রতিষ্ঠানও কখনো PIN বা OTP চায় না। মেসেজের নম্বরে উত্তর না দিয়ে প্রতিষ্ঠানের অফিসিয়াল নম্বরে নিজে ফোন করে যাচাই করুন। সন্দেহজনক মেসেজ Check পাতায় পরীক্ষা করতে পারেন।";
+    }
+    return "সন্দেহজনক মেসেজে উত্তর দেবেন না, লিংকে চাপ দেবেন না এবং PIN, OTP বা টাকা পাঠাবেন না। প্রেরকের দেওয়া নম্বর ব্যবহার না করে প্রতিষ্ঠানের অফিসিয়াল নম্বরে নিজে যোগাযোগ করুন। নির্দিষ্ট মেসেজ হলে Check পাতায় পেস্ট করুন; টাকা পাঠিয়ে থাকলে Get Help পাতার ধাপগুলো অনুসরণ করুন।";
+  }
+
+  if (emergency) {
+    return "Stop sending money or sharing codes now. Call bKash at 16247, Nagad at 16167, Rocket at 16207, or your bank and ask them to freeze or reverse the transaction; change your PIN, save screenshots, and report urgent cases to 999. Ignore anyone who later asks for a fee to ‘recover’ your money.";
+  }
+  if (spotting) {
+    return "Common scam signs are unexpected prizes or jobs, pressure to act immediately, upfront fees, suspicious links, and requests for a PIN or OTP. Real banks and mobile-wallet providers never ask for those secret codes. Contact the organization using its official number—not the number in the message—and paste suspicious text into the Check page.";
+  }
+  return "Do not reply, click links, send money, or share a PIN or OTP until you verify the sender through an official number. Paste a specific message into the Check page for a quick risk check. If you already paid or shared a code, open Get Help for immediate recovery steps.";
+}
+
 /** True when an error from a server function means the AI is not available. */
 export function isAiUnavailable(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
