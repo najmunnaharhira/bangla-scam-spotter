@@ -13,6 +13,8 @@ import {
 
 import { useWebMCP } from "use-webmcp-tool";
 
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
+
 import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -170,22 +172,23 @@ function HelpPage() {
       },
       required: ["what_happened", "money_sent", "when_happened"],
     },
-    execute: async ({ what_happened, money_sent, when_happened, channel: inputChannel, provider: inputProvider }) => {
-      setWhatHappened(what_happened);
-      setMoneySent(money_sent);
-      setWhenHappened(when_happened);
-      if (inputChannel) setChannel(inputChannel);
-      if (inputProvider) setProvider(inputProvider);
-      const generated = await runPlan({
-        whatHappened: what_happened.trim(),
-        channel: inputChannel ?? channel,
-        moneySent: money_sent,
-        whenHappened: when_happened,
-        provider: inputProvider?.trim() || undefined,
-      });
-      const steps = generated.steps.map((s, i) => `${i + 1}. [${s.priority === 1 ? "now" : s.priority === 2 ? "today" : "when you can"}] ${s.title}: ${s.detail}`).join("\n");
-      return `Urgency: ${generated.urgency}\nLikely scam type: ${generated.scamType}\n${generated.whatLikelyHappened}\n\nSteps:\n${steps}\n\nReport to: ${generated.reportTo.join(", ")}`;
-    },
+    execute: async ({ what_happened, money_sent, when_happened, channel: inputChannel, provider: inputProvider }) =>
+      runWebMCPTool("get_recovery_plan", async () => {
+        setWhatHappened(what_happened);
+        setMoneySent(money_sent);
+        setWhenHappened(when_happened);
+        if (inputChannel) setChannel(inputChannel);
+        if (inputProvider) setProvider(inputProvider);
+        const generated = await runPlan({
+          whatHappened: what_happened.trim(),
+          channel: inputChannel ?? channel,
+          moneySent: money_sent,
+          whenHappened: when_happened,
+          provider: inputProvider?.trim() || undefined,
+        });
+        const steps = generated.steps.map((s, i) => `${i + 1}. [${s.priority === 1 ? "now" : s.priority === 2 ? "today" : "when you can"}] ${s.title}: ${s.detail}`).join("\n");
+        return `Urgency: ${generated.urgency}\nLikely scam type: ${generated.scamType}\n${generated.whatLikelyHappened}\n\nSteps:\n${steps}\n\nReport to: ${generated.reportTo.join(", ")}`;
+      }),
   });
 
   return (
