@@ -14,6 +14,8 @@ import {
 
 import { useWebMCP } from "use-webmcp-tool";
 
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
+
 import { useLanguage } from "@/components/language-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,13 +114,14 @@ function PracticePage() {
       required: ["is_scam"],
     },
     enabled: !!current && !answered,
-    execute: ({ is_scam }) => {
-      if (!current) throw new Error("No practice message is loaded right now.");
-      guess(is_scam);
-      const correct = is_scam === current.isScam;
-      const flags = current.redFlags.length ? `\nRed flags: ${current.redFlags.join("; ")}` : "";
-      return `${correct ? "Correct" : "Not quite"} — this message is ${current.isScam ? "a scam" : "genuine"}. ${current.explanation}${flags}`;
-    },
+    execute: ({ is_scam }) =>
+      runWebMCPTool("answer_practice_question", () => {
+        if (!current) throw new Error("No practice message is loaded right now.");
+        guess(is_scam);
+        const correct = is_scam === current.isScam;
+        const flags = current.redFlags.length ? `\nRed flags: ${current.redFlags.join("; ")}` : "";
+        return `${correct ? "Correct" : "Not quite"} — this message is ${current.isScam ? "a scam" : "genuine"}. ${current.explanation}${flags}`;
+      }),
   });
 
   useWebMCP({
@@ -126,10 +129,11 @@ function PracticePage() {
     description: "Advances to the next message in the current Scam Spotter practice round.",
     inputSchema: { type: "object", properties: {} },
     enabled: answered && !roundDone,
-    execute: () => {
-      next();
-      return "Moved to the next practice message.";
-    },
+    execute: () =>
+      runWebMCPTool("next_practice_message", () => {
+        next();
+        return "Moved to the next practice message.";
+      }),
   });
 
   return (
