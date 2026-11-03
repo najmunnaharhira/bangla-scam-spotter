@@ -44,6 +44,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useWebMCP } from "use-webmcp-tool";
 
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
+
 import { useHistory } from "@/hooks/use-check-history";
 import { reportScamSender, useScamReportCount } from "@/hooks/use-scam-reports";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
@@ -240,15 +242,16 @@ function CheckPage() {
       required: ["text"],
     },
     annotations: { readOnlyHint: true },
-    execute: async ({ text: inputText, sender: inputSender, channel: inputChannel }) => {
-      setText(inputText);
-      if (inputSender) setSender(inputSender);
-      if (inputChannel) setChannel(inputChannel);
-      const analysis = await runCheck({ text: inputText, sender: inputSender, channel: inputChannel });
-      const flags = analysis.redFlags.map((f) => `- "${f.quote}": ${f.reason}`).join("\n");
-      const steps = analysis.nextSteps.map((s) => `- ${s}`).join("\n");
-      return `Verdict: ${analysis.verdict} (risk ${analysis.riskScore}/100)\n${analysis.summary}${flags ? `\n\nRed flags:\n${flags}` : ""}${steps ? `\n\nNext steps:\n${steps}` : ""}`;
-    },
+    execute: async ({ text: inputText, sender: inputSender, channel: inputChannel }) =>
+      runWebMCPTool("check_message", async () => {
+        setText(inputText);
+        if (inputSender) setSender(inputSender);
+        if (inputChannel) setChannel(inputChannel);
+        const analysis = await runCheck({ text: inputText, sender: inputSender, channel: inputChannel });
+        const flags = analysis.redFlags.map((f) => `- "${f.quote}": ${f.reason}`).join("\n");
+        const steps = analysis.nextSteps.map((s) => `- ${s}`).join("\n");
+        return `Verdict: ${analysis.verdict} (risk ${analysis.riskScore}/100)\n${analysis.summary}${flags ? `\n\nRed flags:\n${flags}` : ""}${steps ? `\n\nNext steps:\n${steps}` : ""}`;
+      }),
   });
 
   const handleExplainBangla = async () => {

@@ -36,7 +36,12 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | undefined {
 export function useSpeechRecognition(lang: "en" | "bn") {
   const [listening, setListening] = React.useState(false);
   const recognitionRef = React.useRef<SpeechRecognitionLike | null>(null);
-  const supported = React.useMemo(() => !!getSpeechRecognitionCtor(), []);
+  // False during SSR/hydration, settled in an effect — a browser-only value
+  // computed in render would mismatch the server-rendered mic button.
+  const [supported, setSupported] = React.useState(false);
+  React.useEffect(() => {
+    setSupported(!!getSpeechRecognitionCtor());
+  }, []);
 
   const start = React.useCallback(
     (onResult: (text: string, isFinal: boolean) => void) => {
