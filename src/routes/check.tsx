@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Check,
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "@/components/language-provider";
+import { useAuth } from "@/components/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -238,6 +239,7 @@ function CheckPage() {
       },
       required: ["text"],
     },
+    annotations: { readOnlyHint: true },
     execute: async ({ text: inputText, sender: inputSender, channel: inputChannel }) => {
       setText(inputText);
       if (inputSender) setSender(inputSender);
@@ -591,11 +593,13 @@ function SenderReportWidget({
   scamType: string;
 }) {
   const { t, tf, lang } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
   const count = useScamReportCount(sender);
   const [status, setStatus] = React.useState<"idle" | "sending" | "sent">("idle");
   const [district, setDistrict] = React.useState<string>("");
 
   const handleReport = async () => {
+    if (!user) return false;
     setStatus("sending");
     const ok = await reportScamSender({
       identifier: sender,
@@ -604,7 +608,39 @@ function SenderReportWidget({
       scamType,
     });
     setStatus(ok ? "sent" : "idle");
+    return ok;
   };
+
+  useWebMCP<{ district?: string }>({
+    name: "report_current_scam_sender",
+    description:
+      "Reports the sender shown in the current ScamShield BD check result. The person must already be signed in; the saved report is tied to their account.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        district: {
+          type: "string",
+          description: "Optional Bangladesh district id, for example dhaka or chattogram",
+        },
+      },
+    },
+    annotations: { readOnlyHint: false, consequentialHint: true },
+    enabled: !!user && status === "idle",
+    execute: async ({ district: agentDistrict }) => {
+      if (!user) throw new Error("Sign in before reporting a scam sender.");
+      if (agentDistrict) setDistrict(agentDistrict);
+      setStatus("sending");
+      const ok = await reportScamSender({
+        identifier: sender,
+        channel,
+        district: agentDistrict || district || undefined,
+        scamType,
+      });
+      setStatus(ok ? "sent" : "idle");
+      if (!ok) throw new Error("The report could not be saved.");
+      return `Reported ${sender} as a scam sender. The report is tied to the signed-in account.`;
+    },
+  });
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/50 p-3 text-sm">
@@ -614,7 +650,7 @@ function SenderReportWidget({
           {tf("check.reportedByCount", { count })}
         </Badge>
       ) : null}
-      {status === "idle" ? (
+      {status === "idle" && user ? (
         <Select value={district} onValueChange={setDistrict}>
           <SelectTrigger className="h-9 w-auto min-w-[9rem] text-xs" aria-label={t("check.reportDistrictLabel")}>
             <SelectValue placeholder={t("check.reportDistrictLabel")} />
@@ -628,21 +664,27 @@ function SenderReportWidget({
           </SelectContent>
         </Select>
       ) : null}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="ml-auto"
-        onClick={() => void handleReport()}
-        disabled={status !== "idle"}
-      >
-        <Flag className="size-4" aria-hidden="true" />
-        {status === "sending"
-          ? t("check.reportSending")
-          : status === "sent"
-            ? t("check.reportSent")
-            : t("check.reportSender")}
-      </Button>
+      {!authLoading && !user ? (
+        <Button asChild variant="outline" size="sm" className="ml-auto">
+          <Link to="/sign-in"><Flag className="size-4" aria-hidden="true" />Sign in to report</Link>
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="ml-auto"
+          onClick={() => void handleReport()}
+          disabled={status !== "idle" || authLoading}
+        >
+          <Flag className="size-4" aria-hidden="true" />
+          {status === "sending"
+            ? t("check.reportSending")
+            : status === "sent"
+              ? t("check.reportSent")
+              : t("check.reportSender")}
+        </Button>
+      )}
     </div>
   );
 }

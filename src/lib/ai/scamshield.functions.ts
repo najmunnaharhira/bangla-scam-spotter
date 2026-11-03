@@ -2,10 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { NoObjectGeneratedError, streamObject, streamText } from "ai";
 import { z } from "zod";
 import type { AnalysisResult, PracticeItem, RecoveryPlan, Verdict } from "@/lib/types";
-
-const GATEWAY_BASE_URL = "https://ai.gateway.lovable.dev/v1";
-const ANALYZE_MODEL = "google/gemini-3.8-flash";
-const RECOVERY_MODEL = "openai/gpt-6-astra";
+import { getScamShieldModel } from "./provider.server";
 
 const SYSTEM_PROMPT = `You are a fraud-detection assistant for Bangladesh helping everyday people check whether a message is a scam. You know common local scams: fake mobile financial service (bKash, Nagad, Rocket) "wrong send" and cashback messages, OTP and PIN requests, fake job and visa offers with fees, lottery or prize wins, fake parcel/customs fees, romance and investment scams, fake government or bank notices, phishing links, and impersonation of relatives or officials.
 
@@ -137,16 +134,6 @@ export const analyzeMessage = createServerFn({ method: "POST" })
       throw new Error("TOO_BIG: The screenshot is too large. Please upload an image under 5 MB.");
     }
 
-    const { createLovableAiGatewayProvider } = await import("./gateway.server");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
-    }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
-      baseURL: GATEWAY_BASE_URL,
-      structuredOutputs: true,
-    });
-
     const contextLines = [
       `Channel: ${data.channel || "Unknown"}.`,
       `Sender: ${data.sender?.trim() ? data.sender.trim() : "Unknown sender"}.`,
@@ -176,7 +163,7 @@ export const analyzeMessage = createServerFn({ method: "POST" })
     let raw: unknown;
     try {
       const result = streamObject({
-        model: provider(ANALYZE_MODEL),
+        model: await getScamShieldModel("analysis"),
         schema: analysisSchema,
         system: SYSTEM_PROMPT,
         messages,
@@ -220,20 +207,11 @@ export const analyzeMessage = createServerFn({ method: "POST" })
 export const explainBangla = createServerFn({ method: "POST" })
   .inputValidator(banglaInputSchema.parse)
   .handler(async ({ data }): Promise<string> => {
-    const { createLovableAiGatewayProvider } = await import("./gateway.server");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
-    }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
-      baseURL: GATEWAY_BASE_URL,
-    });
-
     const prompt = `Explain this scam-check result in simple Bangla:\n${JSON.stringify(data.result)}`;
 
     try {
       const result = streamText({
-        model: provider(ANALYZE_MODEL),
+        model: await getScamShieldModel("analysis"),
         system: BANGLA_SYSTEM_PROMPT,
         messages: [{ role: "user" as const, content: prompt }],
       });
@@ -246,20 +224,10 @@ export const explainBangla = createServerFn({ method: "POST" })
 export const generatePractice = createServerFn({ method: "POST" })
   .inputValidator(practiceInputSchema.parse)
   .handler(async (): Promise<PracticeItem[]> => {
-    const { createLovableAiGatewayProvider } = await import("./gateway.server");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
-    }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
-      baseURL: GATEWAY_BASE_URL,
-      structuredOutputs: true,
-    });
-
     let raw: unknown;
     try {
       const result = streamObject({
-        model: provider(ANALYZE_MODEL),
+        model: await getScamShieldModel("analysis"),
         schema: practiceSchema,
         system: PRACTICE_SYSTEM_PROMPT,
         messages: [
@@ -293,16 +261,6 @@ export const generatePractice = createServerFn({ method: "POST" })
 export const generateRecoverySteps = createServerFn({ method: "POST" })
   .inputValidator(recoveryInputSchema.parse)
   .handler(async ({ data }): Promise<RecoveryPlan> => {
-    const { createLovableAiGatewayProvider } = await import("./gateway.server");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
-    }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
-      baseURL: GATEWAY_BASE_URL,
-      structuredOutputs: true,
-    });
-
     const moneySentLabels: Record<typeof data.moneySent, string> = {
       yes: "Yes, they sent money",
       pin_otp: "They shared a PIN or OTP",
@@ -330,11 +288,10 @@ export const generateRecoverySteps = createServerFn({ method: "POST" })
     let raw: unknown;
     try {
       const result = streamObject({
-        model: provider(RECOVERY_MODEL),
+        model: await getScamShieldModel("recovery"),
         schema: recoverySchema,
         system: RECOVERY_SYSTEM_PROMPT,
         messages: [{ role: "user" as const, content: prompt }],
-        providerOptions: { lovable: { reasoningEffort: "medium" } },
       });
       raw = await result.object;
     } catch (error) {
@@ -411,15 +368,6 @@ const followUpInputSchema = z.object({
 export const askRecoveryFollowUp = createServerFn({ method: "POST" })
   .inputValidator(followUpInputSchema.parse)
   .handler(async ({ data }): Promise<string> => {
-    const { createLovableAiGatewayProvider } = await import("./gateway.server");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
-    }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
-      baseURL: GATEWAY_BASE_URL,
-    });
-
     const context = [
       "What the person reported:",
       `"""${data.incident.whatHappened}"""`,
@@ -431,7 +379,7 @@ export const askRecoveryFollowUp = createServerFn({ method: "POST" })
 
     try {
       const result = streamText({
-        model: provider(RECOVERY_MODEL),
+        model: await getScamShieldModel("recovery"),
         system: `${FOLLOW_UP_SYSTEM_PROMPT}\n\n${context}`,
         messages: [...data.history.slice(-10), { role: "user" as const, content: data.question }],
       });
@@ -467,15 +415,6 @@ const checkFollowUpInputSchema = z.object({
 export const askCheckFollowUp = createServerFn({ method: "POST" })
   .inputValidator(checkFollowUpInputSchema.parse)
   .handler(async ({ data }): Promise<string> => {
-    const { createLovableAiGatewayProvider } = await import("./gateway.server");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
-    }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
-      baseURL: GATEWAY_BASE_URL,
-    });
-
     const context = [
       data.messageText?.trim() ? `The original message:\n"""${data.messageText.trim()}"""` : "",
       "The check result:",
@@ -486,7 +425,7 @@ export const askCheckFollowUp = createServerFn({ method: "POST" })
 
     try {
       const result = streamText({
-        model: provider(ANALYZE_MODEL),
+        model: await getScamShieldModel("analysis"),
         system: `${CHECK_FOLLOW_UP_SYSTEM_PROMPT}\n\n${context}`,
         messages: [...data.history.slice(-10), { role: "user" as const, content: data.question }],
       });
@@ -520,18 +459,9 @@ const agentChatInputSchema = z.object({
 export const askScamAgent = createServerFn({ method: "POST" })
   .inputValidator(agentChatInputSchema.parse)
   .handler(async ({ data }): Promise<string> => {
-    const { createLovableAiGatewayProvider } = await import("./gateway.server");
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) {
-      throw new Error("UNAVAILABLE: The AI service is not configured yet. Please try again later.");
-    }
-    const provider = createLovableAiGatewayProvider(apiKey, undefined, {
-      baseURL: GATEWAY_BASE_URL,
-    });
-
     try {
       const result = streamText({
-        model: provider(ANALYZE_MODEL),
+        model: await getScamShieldModel("analysis"),
         system: AGENT_SYSTEM_PROMPT,
         messages: [...data.history.slice(-16), { role: "user" as const, content: data.question }],
       });

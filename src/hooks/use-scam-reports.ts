@@ -3,8 +3,7 @@ import * as React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeIdentifier } from "@/lib/report-utils";
 
-/** Community scam-sender reports, backed by a public Supabase table (no auth
- * required). Degrades silently if the table isn't reachable yet. */
+/** Community scam-sender report counts. Reading stays public; creating a report requires auth. */
 export function useScamReportCount(identifier: string | undefined) {
   const [count, setCount] = React.useState<number | null>(null);
 
@@ -55,6 +54,8 @@ export interface ReportScamSenderInput {
 export async function reportScamSender(input: ReportScamSenderInput): Promise<boolean> {
   const trimmed = input.identifier.trim();
   if (trimmed.length < 3) return false;
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) return false;
   const { error } = await supabase.from("scam_reports").insert({
     identifier: trimmed.slice(0, 120),
     identifier_key: normalizeIdentifier(trimmed),
@@ -62,6 +63,7 @@ export async function reportScamSender(input: ReportScamSenderInput): Promise<bo
     district: input.district?.trim() ? input.district.trim().slice(0, 60) : null,
     channel: input.channel?.trim() ? input.channel.trim().slice(0, 40) : null,
     scam_type: input.scamType?.trim() ? input.scamType.trim().slice(0, 80) : null,
+    user_id: authData.user.id,
   });
   return !error;
 }

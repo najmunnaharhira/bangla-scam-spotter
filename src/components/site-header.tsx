@@ -1,8 +1,10 @@
 import * as React from "react";
 import { Link, useLocation, useMatchRoute } from "@tanstack/react-router";
-import { Menu, ShieldCheck, X } from "lucide-react";
+import { LogIn, LogOut, Menu, ShieldCheck, X } from "lucide-react";
 
 import { BuildathonSticker } from "@/components/buildathon-sticker";
+import { useAuth } from "@/components/auth-provider";
+import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/components/language-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,7 @@ function LanguageToggle() {
 
 export function SiteHeader() {
   const { t } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const matchRoute = useMatchRoute();
   const { pathname } = useLocation();
@@ -87,6 +90,16 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-1 md:ml-2">
+          {!authLoading ? user ? (
+            <Button type="button" variant="ghost" size="sm" title={user.email} onClick={() => void supabase.auth.signOut()}>
+              <LogOut className="size-4" aria-hidden="true" />
+              <span className="hidden lg:inline">Sign out</span>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/sign-in"><LogIn className="size-4" aria-hidden="true" /><span className="hidden lg:inline">Sign in</span></Link>
+            </Button>
+          ) : null}
           <LanguageToggle />
           <ThemeToggle />
         </div>

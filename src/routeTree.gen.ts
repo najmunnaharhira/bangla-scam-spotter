@@ -17,6 +17,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as ScamMapRouteImport } from './routes/scam-map'
+import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 
@@ -60,6 +61,11 @@ const ScamMapRoute = ScamMapRouteImport.update({
   path: '/scam-map',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
   '/scam-map': typeof ScamMapRoute
+  '/sign-in': typeof SignInRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
   '/scam-map': typeof ScamMapRoute
+  '/sign-in': typeof SignInRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
   '/scam-map': typeof ScamMapRoute
+  '/sign-in': typeof SignInRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/practice'
     | '/scam-map'
+    | '/sign-in'
     | '/admin/login'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/practice'
     | '/scam-map'
+    | '/sign-in'
     | '/admin/login'
     | '/admin'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/practice'
     | '/scam-map'
+    | '/sign-in'
     | '/admin/login'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   PracticeRoute: typeof PracticeRoute
   ScamMapRoute: typeof ScamMapRoute
+  SignInRoute: typeof SignInRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -218,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScamMapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   PracticeRoute: PracticeRoute,
   ScamMapRoute: ScamMapRoute,
+  SignInRoute: SignInRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

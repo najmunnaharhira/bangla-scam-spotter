@@ -100,6 +100,19 @@ function PracticePage() {
     }
   }, [roundDone, score, streak]);
 
+  useWebMCP({
+    name: "get_current_practice_message",
+    description:
+      "Reads the current Scam Spotter practice message and progress so a browsing agent can decide whether it is a scam before answering.",
+    inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: true },
+    enabled: !!current,
+    execute: () => {
+      if (!current || !items) throw new Error("No practice message is loaded right now.");
+      return `Question ${index + 1} of ${items.length}:\n${current.message}\n\nThis question has ${answered ? "already" : "not yet"} been answered.`;
+    },
+  });
+
   useWebMCP<{ is_scam: boolean }>({
     name: "answer_practice_question",
     description:
@@ -111,6 +124,7 @@ function PracticePage() {
       },
       required: ["is_scam"],
     },
+    annotations: { readOnlyHint: false },
     enabled: !!current && !answered,
     execute: ({ is_scam }) => {
       if (!current) throw new Error("No practice message is loaded right now.");
@@ -125,6 +139,7 @@ function PracticePage() {
     name: "next_practice_message",
     description: "Advances to the next message in the current Scam Spotter practice round.",
     inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: false },
     enabled: answered && !roundDone,
     execute: () => {
       next();

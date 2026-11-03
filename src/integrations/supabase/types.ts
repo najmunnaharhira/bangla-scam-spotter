@@ -24,6 +24,7 @@ export type Database = {
           identifier_key: string
           note: string | null
           scam_type: string | null
+          user_id: string | null
         }
         Insert: {
           channel?: string | null
@@ -34,6 +35,7 @@ export type Database = {
           identifier_key: string
           note?: string | null
           scam_type?: string | null
+          user_id: string
         }
         Update: {
           channel?: string | null
@@ -44,8 +46,17 @@ export type Database = {
           identifier_key?: string
           note?: string | null
           scam_type?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scam_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

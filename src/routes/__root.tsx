@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/components/language-provider";
+import { AuthProvider } from "@/components/auth-provider";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -135,15 +136,17 @@ function RootShell({ children }: { children: ReactNode }) {
         >
           Skip to main content
         </a>
-        <LanguageProvider>
-          <SiteHeader />
-          <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-            {children}
-          </main>
-          <SiteFooter />
-          <PwaInstallPrompt />
-          <TalkToScamShield />
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <SiteHeader />
+            <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+              {children}
+            </main>
+            <SiteFooter />
+            <PwaInstallPrompt />
+            <TalkToScamShield />
+          </LanguageProvider>
+        </AuthProvider>
         <Scripts />
       </body>
     </html>
